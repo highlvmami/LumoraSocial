@@ -51,7 +51,7 @@ export function getFollowStats(userId, viewerId = null) {
     .prepare(
       `SELECT
          (SELECT COUNT(*) FROM follows WHERE following_id = ? AND status = 'accepted') AS followers,
-         (SELECT COUNT(*) FROM follows WHERE follower_id = ? AND status = 'accepted') AS following,
+         (SELECT COUNT(*) FROM follows WHERE follower_id = ? AND status = 'accepted') AS "following",
          (SELECT COUNT(*) FROM follows WHERE following_id = ? AND status = 'pending') AS requests`
     )
     .get(userId, userId, userId);

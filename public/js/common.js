@@ -63,6 +63,7 @@ export function badge(user) {
 
 /** İsim + (varsa) doğrulama rozeti. */
 export const nameWithBadge = (user) => [user.displayName, badge(user)];
+export const usernameWithBadge = (user) => [user.username, badge(user)];
 
 /** Sosyal ağ anahtarları: görünen ad, simge ve kullanıcı adından adres üretimi. */
 export const SOCIALS = {

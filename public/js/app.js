@@ -1,4 +1,4 @@
-import { api, avatar, dropdown, formatDate, h, handleForm, logout, nameWithBadge, openReportDialog, openLightbox, resizeImage, SOCIALS, socialHref, timeAgo, toast } from './common.js';
+import { api, avatar, dropdown, formatDate, h, handleForm, logout, nameWithBadge, usernameWithBadge, openReportDialog, openLightbox, resizeImage, SOCIALS, socialHref, timeAgo, toast } from './common.js';
 import { showSettings } from './settings.js';
 import { showNotifications } from './notifications.js';
 import { showMessages } from './messages.js';
@@ -15,8 +15,8 @@ function renderProfileCard() {
     ...[
       me.coverUrl ? h('div', { class: 'mini-cover', style: { backgroundImage: `url("${me.coverUrl}")` } }) : null,
       avatar(me, 'lg'),
-      h('div', { class: 'name' }, ...nameWithBadge(me)),
-      h('div', { class: 'muted small' }, `@${me.username}`),
+      h('div', { class: 'name' }, ...usernameWithBadge(me)),
+      h('div', { class: 'muted small' }, me.displayName),
       me.role === 'admin' ? h('div', {}, h('span', { class: 'badge-admin' }, 'Yönetici')) : null,
       me.bio ? h('p', { class: 'bio' }, me.bio) : h('p', { class: 'bio muted' }, 'Henüz biyografi yok.'),
       h(
@@ -211,8 +211,8 @@ function renderPost(post) {
       h(
         'div',
         { class: 'who' },
-        profileLink(post.author, nameWithBadge(post.author)),
-        h('div', { class: 'muted small' }, `@${post.author.username} · ${timeAgo(post.createdAt)}`)
+        profileLink(post.author, usernameWithBadge(post.author)),
+        h('div', { class: 'muted small' }, `${post.author.displayName} · ${timeAgo(post.createdAt)}`)
       ),
       bookmarkButton(post),
       postMenu(post, () => el)
