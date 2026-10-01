@@ -33,7 +33,7 @@ function timed(label, sql, fn) {
   const start = performance.now();
   const result = fn();
   const ms = performance.now() - start;
-  if (ms > SLOW_MS) console.log('[db] yavaş ' + label + ' ' + Math.round(ms) + ' ms: ' + sql.replace(/s+/g, ' ').slice(0, 80));
+  if (ms > SLOW_MS) console.log(`[db] yavaş ${label} ${Math.round(ms)} ms: ${sql.replace(/\s+/g, ' ').slice(0, 80)}`);
   return result;
 }
 
