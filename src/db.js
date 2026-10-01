@@ -44,8 +44,19 @@ class Statement {
   run(...args) { return timed('run', this.sql, () => this.stmt.run(...args)); }
 }
 
+const statements = new Map();
+
 export const db = {
-  prepare: (sql) => timed('prepare', sql, () => new Statement(raw.prepare(sql), sql)),
+  // Turso'da her prepare bir ağ gidiş-dönüşü olduğu için hazırlanan sorgular saklanır
+  prepare: (sql) => {
+    let stmt = statements.get(sql);
+    if (!stmt) {
+      stmt = timed('prepare', sql, () => new Statement(raw.prepare(sql), sql));
+      if (statements.size > 500) statements.clear();
+      statements.set(sql, stmt);
+    }
+    return stmt;
+  },
   exec: (sql) => raw.exec(sql),
 };
 
