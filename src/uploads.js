@@ -2,10 +2,13 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { config } from './config.js';
+import { db } from './db.js';
 import { bad } from './validation.js';
 
 export const UPLOADS_URL = '/uploads';
 export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+
+const MIME = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp' };
 
 /** Dosya içeriğine (sihirli baytlara) bakarak resim türünü bulur; uzantıya/başlığa güvenmez. */
 function detectImageType(buf) {
@@ -16,8 +19,8 @@ function detectImageType(buf) {
 }
 
 /**
- * Resmi `data/uploads/<klasör>/` altına rastgele bir adla kaydeder ve herkese açık URL'sini döner.
- * İleride paylaşım resimleri gibi başka yüklemeler de bu fonksiyonu kullanabilir.
+ * Resmi veritabanındaki `uploads` tablosuna rastgele bir adla kaydeder ve herkese açık URL'sini döner.
+ * Sunucu diski kalıcı olmayabileceği (ör. Render) için dosya sistemine yazılmaz.
  */
 export function saveImage(folder, buffer) {
   if (!Buffer.isBuffer(buffer) || !buffer.length) throw bad('Resim dosyası gönderilmedi.');
@@ -25,17 +28,24 @@ export function saveImage(folder, buffer) {
   const ext = detectImageType(buffer);
   if (!ext) throw bad('Yalnızca JPG, PNG veya WEBP resim yüklenebilir.');
 
-  const dir = path.join(config.uploadsDir, folder);
-  fs.mkdirSync(dir, { recursive: true });
-  const name = `${crypto.randomBytes(12).toString('hex')}.${ext}`;
-  fs.writeFileSync(path.join(dir, name), buffer);
-  return `${UPLOADS_URL}/${folder}/${name}`;
+  const key = `${folder}/${crypto.randomBytes(12).toString('hex')}.${ext}`;
+  db.prepare('INSERT INTO uploads (path, mime, data) VALUES (?, ?, ?)').run(key, MIME[ext], buffer);
+  return `${UPLOADS_URL}/${key}`;
 }
 
-/** saveImage ile kaydedilmiş bir dosyayı siler (bulunamazsa sessizce geçer). */
+/** Kayıtlı resmi döner; yoksa null. */
+export function getUpload(key) {
+  return db.prepare('SELECT mime, data FROM uploads WHERE path = ?').get(key) ?? null;
+}
+
+/** saveImage ile kaydedilmiş bir resmi siler (bulunamazsa sessizce geçer). */
 export function removeUpload(url) {
   if (!url || !url.startsWith(`${UPLOADS_URL}/`)) return;
-  const file = path.resolve(config.uploadsDir, url.slice(UPLOADS_URL.length + 1));
+  const key = url.slice(UPLOADS_URL.length + 1);
+  db.prepare('DELETE FROM uploads WHERE path = ?').run(key);
+
+  // Eski sürümlerde diske yazılmış dosyalar
+  const file = path.resolve(config.uploadsDir, key);
   if (!file.startsWith(config.uploadsDir + path.sep)) return; // klasör dışına çıkmayı engelle
   fs.rm(file, { force: true }, () => {});
 }

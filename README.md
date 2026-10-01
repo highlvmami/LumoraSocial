@@ -2,7 +2,7 @@
 
 Arkadaşlar için küçük bir sosyal medya sitesi: üyelik, akış, emoji tepkileri, yorumlar, profil düzenleme ve yönetim paneli.
 
-**Teknoloji:** Node.js (22.5+) · Express 5 · SQLite (Node'un yerleşik `node:sqlite` modülü, ek kurulum yok) · sade HTML/CSS/JS · şifreler bcrypt ile hash'lenir.
+**Teknoloji:** Node.js (20+) · Express 5 · SQLite / Turso (`libsql`; yerelde dosya, canlıda bulut veritabanı) · sade HTML/CSS/JS · şifreler bcrypt ile hash'lenir.
 
 ## Çalıştırma
 
@@ -23,7 +23,8 @@ Tarayıcıda `http://localhost:3000` adresini açın. Geliştirirken `npm run de
 | `SESSION_SECRET` | Oturum çerezlerini imzalayan uzun rastgele değer |
 | `ADMIN_SETUP_KEY` | İlk yönetici kaydında istenen gizli anahtar |
 | `DB_PATH` | Veritabanı dosyası (varsayılan `data/lumora.db`) |
-| `UPLOADS_DIR` | Yüklenen resimler (varsayılan `data/uploads`) |
+| `UPLOADS_DIR` | Eski sürümlerden kalan, diske yazılmış resimler (yeni resimler veritabanında tutulur) |
+| `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` | Doldurulursa veriler Turso bulut veritabanında tutulur (boşsa `DB_PATH`) |
 | `NODE_ENV` | HTTPS arkasında canlıya alırken `production` |
 | `APP_URL` | Sitenin dışarıdan açılan adresi; e-posta bağlantıları ve sosyal giriş dönüşleri bununla kurulur |
 | `SMTP_*`, `MAIL_FROM` | E-posta gönderimi (boşsa e-postalar sunucu penceresine yazılır) |
@@ -40,6 +41,13 @@ Bu servisler ayarlanmadan da site çalışır: e-posta doğrulama bağlantılar�
 - **SMS (Twilio):** twilio.com'da hesap açın; *Account SID*, *Auth Token* ve SMS gönderebilen bir numarayı (`TWILIO_FROM`) girin. Ücretlidir.
 - **Google ile giriş:** console.cloud.google.com > API'ler ve Hizmetler > Kimlik bilgileri > *OAuth istemci kimliği* (Web uygulaması). Yetkili yönlendirme URI'si: `APP_URL/auth/google/callback`.
 - **GitHub ile giriş:** github.com > Settings > Developer settings > *OAuth Apps* > New. Callback URL: `APP_URL/auth/github/callback`.
+
+## Canlıya alma (Render + Turso, ücretsiz)
+
+1. turso.tech'te bir veritabanı ve token oluşturun.
+2. Render'da Web Service açın: Build `npm install`, Start `npm start`.
+3. Ortam değişkenleri: `NODE_ENV=production`, `SESSION_SECRET`, `ADMIN_SETUP_KEY`, `APP_URL` (Render adresi), `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`.
+4. Ücretsiz planda site 15 dakika boşta kalınca uyur; UptimeRobot gibi bir servisle `/saglik` adresine 10 dakikada bir istek atarak açık tutulabilir.
 
 ## İlk yönetici
 

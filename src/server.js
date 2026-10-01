@@ -8,6 +8,7 @@ import { cleanupLogs } from './models/audit.js';
 import { SqliteSessionStore } from './sessionStore.js';
 import { loadUser } from './middleware/auth.js';
 import { HttpError } from './validation.js';
+import { getUpload } from './uploads.js';
 import authRoutes, { emailVerifyPage } from './routes/auth.js';
 import accountRoutes from './routes/account.js';
 import notificationRoutes from './routes/notifications.js';
@@ -94,7 +95,17 @@ app.get('/yonetim', (req, res) => {
   if (req.user?.role === 'admin') return page('admin.html')(req, res);
   res.redirect(req.user ? '/akis' : '/admin-giris');
 });
+// Uyanık tutma / sağlık kontrolü
+app.get('/saglik', (_req, res) => res.type('text').send('ok'));
 app.use(express.static(pub, { index: false }));
+// Resimler veritabanından; bulunamazsa eski sürümlerden kalan disk dosyalarına bakılır
+app.use('/uploads', (req, res, next) => {
+  let key;
+  try { key = decodeURIComponent(req.path.slice(1)); } catch { return next(); }
+  const file = getUpload(key);
+  if (!file) return next();
+  res.set('Cache-Control', 'public, max-age=2592000, immutable').type(file.mime).send(Buffer.from(file.data));
+});
 app.use('/uploads', express.static(config.uploadsDir, { index: false, fallthrough: false, maxAge: '30d' }));
 
 app.use((err, _req, res, _next) => {

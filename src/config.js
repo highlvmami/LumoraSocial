@@ -15,6 +15,13 @@ export const config = {
   port: Number(process.env.PORT) || 3000,
   dbPath: path.resolve(rootDir, process.env.DB_PATH || 'data/lumora.db'),
   uploadsDir: path.resolve(rootDir, process.env.UPLOADS_DIR || 'data/uploads'),
+
+  // Bulut veritabanı (Turso). Boşsa DB_PATH'teki yerel dosya kullanılır.
+  turso: {
+    url: process.env.TURSO_DATABASE_URL || '',
+    authToken: process.env.TURSO_AUTH_TOKEN || '',
+    replicaPath: path.resolve(rootDir, process.env.TURSO_REPLICA_PATH || 'data/turso-replica.db'),
+  },
   sessionSecret: process.env.SESSION_SECRET || '',
   adminSetupKey: process.env.ADMIN_SETUP_KEY || '',
   isProduction: process.env.NODE_ENV === 'production',

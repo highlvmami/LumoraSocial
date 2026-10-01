@@ -1,16 +1,44 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
+import Database from 'libsql';
 import { config } from './config.js';
 
 fs.mkdirSync(path.dirname(config.dbPath), { recursive: true });
 
-export const db = new DatabaseSync(config.dbPath);
-db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;');
+/*
+ * Turso ayarlıysa (TURSO_DATABASE_URL + TURSO_AUTH_TOKEN) veriler bulutta tutulur:
+ * okumalar sunucudaki yerel kopyadan yapılır, yazmalar doğrudan Turso'ya gider.
+ * Ayarlı değilse her şey DB_PATH'teki yerel dosyada kalır.
+ */
+const remote = Boolean(config.turso.url);
+const raw = remote
+  ? new Database(config.turso.replicaPath, { syncUrl: config.turso.url, authToken: config.turso.authToken })
+  : new Database(config.dbPath);
+if (remote) raw.sync();
+else raw.exec('PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;');
+raw.exec('PRAGMA foreign_keys = ON;');
+
+// libsql her satıra bir `_metadata` alanı ekliyor; yanıtlara sızmasın diye temizlenir.
+const clean = (row) => {
+  if (row && typeof row === 'object') delete row._metadata;
+  return row;
+};
+
+class Statement {
+  constructor(stmt) { this.stmt = stmt; }
+  get(...args) { return clean(this.stmt.get(...args)); }
+  all(...args) { return this.stmt.all(...args).map(clean); }
+  run(...args) { return this.stmt.run(...args); }
+}
+
+export const db = {
+  prepare: (sql) => new Statement(raw.prepare(sql)),
+  exec: (sql) => raw.exec(sql),
+};
 
 /*
  * Şema göçleri. Yeni özellik eklerken diziye YENİ bir eleman ekleyin;
- * mevcut elemanları değiştirmeyin. Sürüm PRAGMA user_version ile takip edilir.
+ * mevcut elemanları değiştirmeyin. Sürüm schema_meta tablosunda tutulur.
  */
 const migrations = [
   // 1: temel şema
@@ -264,14 +292,34 @@ const migrations = [
   );
   CREATE INDEX idx_reports_status ON reports(status, id DESC);
   `,
+
+  // 9: yüklenen resimler veritabanında (sunucu diski kalıcı olmayabilir)
+  `
+  CREATE TABLE uploads (
+    path       TEXT PRIMARY KEY,
+    mime       TEXT NOT NULL,
+    data       BLOB NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  `,
 ];
 
+function schemaVersion() {
+  db.exec('CREATE TABLE IF NOT EXISTS schema_meta (id INTEGER PRIMARY KEY CHECK (id = 1), version INTEGER NOT NULL)');
+  const row = db.prepare('SELECT version FROM schema_meta WHERE id = 1').get();
+  if (row) return row.version;
+  // Eski yerel kurulumlar sürümü PRAGMA user_version'da tutuyordu
+  const legacy = remote ? 0 : db.prepare('PRAGMA user_version').get().user_version;
+  db.prepare('INSERT INTO schema_meta (id, version) VALUES (1, ?)').run(legacy);
+  return legacy;
+}
+
 function migrate() {
-  const current = db.prepare('PRAGMA user_version').get().user_version;
+  const current = schemaVersion();
   for (let v = current; v < migrations.length; v++) {
     transaction(() => {
       db.exec(migrations[v]);
-      db.exec(`PRAGMA user_version = ${v + 1}`);
+      db.prepare('UPDATE schema_meta SET version = ? WHERE id = 1').run(v + 1);
     });
     console.log(`[db] göç ${v + 1} uygulandı`);
   }
