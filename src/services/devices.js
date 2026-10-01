@@ -25,7 +25,10 @@ export function parseUserAgent(ua = '') {
   return { browser, os, mobile, label: `${browser} · ${os}` };
 }
 
-export const clientIp = (req) => (req.ip || '').replace(/^::ffff:/, '');
+// Render, Cloudflare arkasında çalışır; gerçek ziyaretçi adresi cf-connecting-ip başlığındadır
+const behindCloudflare = Boolean(process.env.RENDER);
+export const clientIp = (req) =>
+  ((behindCloudflare && req.get?.('cf-connecting-ip')) || req.ip || '').replace(/^::ffff:/, '');
 
 /** Başarısız giriş denemesini kaydeder (şüpheli giriş tespiti için). */
 export function recordFailedLogin(userId, ip) {

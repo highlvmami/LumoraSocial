@@ -1,3 +1,5 @@
+import { clientIp } from '../services/devices.js';
+
 /**
  * Basit bellek içi hız sınırlayıcı (kaba kuvvet denemelerine karşı).
  * Yalnızca başarısız denemeler sayılır: route, başarısızlıkta `req.rateLimit.fail()` çağırır.
@@ -21,7 +23,7 @@ export function failureLimiter({ max, windowMs, message }) {
   }, windowMs).unref();
 
   return (req, res, next) => {
-    const key = req.ip;
+    const key = clientIp(req);
     const now = Date.now();
     let entry = hits.get(key);
     if (!entry || entry.reset < now) {

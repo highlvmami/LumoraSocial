@@ -22,8 +22,17 @@ if (!remote) raw.exec('PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;');
 raw.exec('PRAGMA foreign_keys = ON;');
 
 // libsql her satıra bir `_metadata` alanı ekliyor; yanıtlara sızmasın diye temizlenir.
+// Turso, SQL anahtar kelimesi olan sütun adlarını (action, following…) büyük harfle döndürüyor;
+// şemadaki tüm adlar küçük harf olduğu için geri çevrilir.
 const clean = (row) => {
-  if (row && typeof row === 'object') delete row._metadata;
+  if (!row || typeof row !== 'object') return row;
+  delete row._metadata;
+  for (const key of Object.keys(row)) {
+    if (/^[A-Z_]+$/.test(key)) {
+      row[key.toLowerCase()] = row[key];
+      delete row[key];
+    }
+  }
   return row;
 };
 

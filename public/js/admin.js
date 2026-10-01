@@ -139,8 +139,8 @@ const METHODS = { email: 'e-posta', phone: 'telefon', username: 'kullanıcı ad�
 
 /** Olay türü → [simge, başlık, ayrıntı metni]. Yeni olay türü eklerken buraya satır eklemek yeterli. */
 const LABELS = {
-  'user.register': ['🆕', 'Üye kaydı', (d) => `${METHODS[d.method] || d.method} ile kayıt oldu`],
-  'user.register_oauth': ['🆕', 'Üye kaydı', (d) => `${PROVIDERS[d.provider] || d.provider} ile kayıt oldu`],
+  'user.register': ['', 'Üye kaydı', (d) => `${METHODS[d.method] || d.method} ile kayıt oldu`],
+  'user.register_oauth': ['', 'Üye kaydı', (d) => `${PROVIDERS[d.provider] || d.provider} ile kayıt oldu`],
   'admin.setup': ['', 'İlk yönetici kaydı', () => 'KEY ile ilk yönetici oluşturuldu'],
   'admin.user_create': ['', 'Kullanıcı oluşturuldu', (d) => (d.role === 'admin' ? 'yönetici olarak' : 'üye olarak')],
   'auth.login': ['', 'Giriş', (d) => (d.admin ? 'yönetici girişi' : 'şifreyle')],
@@ -191,7 +191,7 @@ function logRow(l) {
     'tr',
     { class: danger ? 'log-danger' : '' },
     h('td', { class: 'nowrap muted small' }, logTime(l.createdAt)),
-    h('td', { class: 'nowrap' }, `${icon} ${title}`),
+    h('td', { class: 'nowrap' }, [icon, title].filter(Boolean).join(' ')),
     h('td', {}, who.filter((x) => x !== null)),
     h('td', { class: 'small' }, detail(l.data || {}) || h('span', { class: 'muted' }, '—')),
     h('td', { class: 'muted small nowrap' }, [localIp(l.ip), l.device].filter(Boolean).join(' · '))
@@ -222,7 +222,7 @@ async function loadLogSummary() {
   const { last24h: s } = await api('/admin/stats');
   document.getElementById('log-summary').replaceChildren(
     ...[
-      ['🆕 Yeni üye', s.registrations],
+      ['Yeni üye', s.registrations],
       ['Giriş', s.logins],
       ['Başarısız giriş', s.failedLogins],
     ].map(([label, n]) => h('div', { class: 'card stat' }, h('div', { class: 'num' }, n), h('div', { class: 'muted small' }, `${label} · son 24 saat`)))
