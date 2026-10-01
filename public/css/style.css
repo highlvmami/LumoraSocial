@@ -147,7 +147,7 @@ input:focus, textarea:focus, select:focus { outline: 2px solid var(--primary); o
   justify-content: center;
   padding: 24px 16px;
 }
-.sidebar { position: sticky; top: 24px; align-self: start; display: flex; flex-direction: column; gap: 16px; }
+.sidebar { position: sticky; top: 82px; align-self: start; display: flex; flex-direction: column; gap: 16px; }
 .profile-card { padding: 24px 20px; text-align: center; }
 .profile-card .avatar { margin: 0 auto 12px; }
 .profile-card .name { font-weight: 700; font-size: 18px; }
@@ -467,7 +467,11 @@ td .actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .chat-locked { padding: 16px; text-align: center; border-top: 1px solid var(--border); }
 
 /* ================= Arama ================= */
-.side-search input { border-radius: 999px; padding: 9px 16px; background: var(--surface); }
+.topbar { position: sticky; top: 0; z-index: 20; background: var(--surface); border-bottom: 1px solid var(--border); }
+.topbar-inner { max-width: 956px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.top-search { flex: 0 1 300px; }
+.top-search input { border-radius: 999px; padding: 8px 16px; background: var(--surface-2); border-color: transparent; }
+.top-search input:focus { background: var(--surface); }
 .search-box { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 14px; }
 .search-box input { border: 0; background: transparent; flex: 1; }
 .search-box input:focus { outline: none; }

@@ -8,12 +8,17 @@
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <div class="layout">
-    <aside class="sidebar">
+  <header class="topbar">
+    <div class="topbar-inner">
       <div class="brand"><span>Lumora</span>Social</div>
-      <form class="side-search" id="side-search" role="search">
+      <form class="top-search" id="side-search" role="search">
         <input type="search" name="q" placeholder="Ara…" autocomplete="off" maxlength="80">
       </form>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
       <section class="card profile-card" id="profile-card"></section>
       <nav class="card nav" id="nav">
         <a href="#/" data-route="feed">Akış</a>
