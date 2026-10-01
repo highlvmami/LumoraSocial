@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Şifre Sıfırlama · LumoraSocial</title>
+  <script src="/js/theme.js"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <main class="auth-page">
+    <div class="card auth-box">
+      <div class="brand"><span>Lumora</span>Social</div>
+      <p class="tagline">Şifreni sıfırla</p>
+
+      <!-- 1. adım: e-posta veya telefon -->
+      <form id="request-form">
+        <p class="muted small">Hesabına bağlı <b>doğrulanmış</b> e-posta adresini veya telefon numaranı yaz. E-postaya bağlantı, telefona 6 haneli kod göndereceğiz.</p>
+        <label for="f-identifier">E-posta veya telefon</label>
+        <input id="f-identifier" name="identifier" autocomplete="username" required>
+        <div class="alert hidden" id="request-alert"></div>
+        <button class="btn block" type="submit">Gönder</button>
+      </form>
+
+      <!-- 2a. adım: telefondan gelen kod -->
+      <form id="code-form" class="hidden">
+        <p class="muted small">Telefonuna gelen 6 haneli kodu ve yeni şifreni gir.</p>
+        <input type="hidden" name="phone">
+        <label for="c-code">Kod</label>
+        <input id="c-code" name="code" inputmode="numeric" pattern="\d{6}" maxlength="6" autocomplete="one-time-code" required>
+        <label for="c-password">Yeni şifre</label>
+        <input id="c-password" name="password" type="password" minlength="8" autocomplete="new-password" required>
+        <label for="c-password2">Yeni şifre (tekrar)</label>
+        <input id="c-password2" name="passwordConfirm" type="password" minlength="8" autocomplete="new-password" required>
+        <div class="alert hidden" id="code-alert"></div>
+        <button class="btn block" type="submit">Şifreyi değiştir</button>
+      </form>
+
+      <!-- 2b. adım: e-postadaki bağlantıyla gelindiyse -->
+      <form id="token-form" class="hidden">
+        <label for="t-password">Yeni şifre</label>
+        <input id="t-password" name="password" type="password" minlength="8" autocomplete="new-password" required>
+        <label for="t-password2">Yeni şifre (tekrar)</label>
+        <input id="t-password2" name="passwordConfirm" type="password" minlength="8" autocomplete="new-password" required>
+        <div class="alert hidden" id="token-alert"></div>
+        <button class="btn block" type="submit">Şifreyi değiştir</button>
+      </form>
+
+      <div id="done" class="hidden">
+        <div class="alert success">Şifren değiştirildi. Güvenliğin için tüm cihazlardan çıkış yapıldı.</div>
+        <a class="btn block" href="/">Giriş yap</a>
+      </div>
+
+      <div class="form-links center"><a href="/">← Girişe dön</a></div>
+    </div>
+  </main>
+  <button type="button" class="theme-toggle" data-theme-toggle>Koyu tema</button>
+  <script type="module" src="/js/forgot.js"></script>
+</body>
+</html>

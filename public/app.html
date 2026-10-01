@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Akış · LumoraSocial</title>
+  <script src="/js/theme.js"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span>Lumora</span>Social</div>
+      <form class="side-search" id="side-search" role="search">
+        <input type="search" name="q" placeholder="Ara…" autocomplete="off" maxlength="80">
+      </form>
+      <section class="card profile-card" id="profile-card"></section>
+      <nav class="card nav" id="nav">
+        <a href="#/" data-route="feed">Akış</a>
+        <a href="#" data-route="me" id="nav-me">Profilim</a>
+        <a href="#/ara" data-route="search">Ara</a>
+        <a href="#/kaydedilenler" data-route="bookmarks">Kaydedilenler</a>
+        <a href="#/mesajlar" data-route="messages">Mesajlar <span class="count-badge hidden" id="unread-messages"></span></a>
+        <a href="#/bildirimler" data-route="notifications">Bildirimler <span class="count-badge hidden" id="unread-count"></span></a>
+        <a href="#/ayarlar/profil" data-route="settings">Ayarlar</a>
+        <a href="/yonetim" id="nav-admin" class="hidden">Yönetim paneli</a>
+        <button type="button" data-theme-toggle>Koyu tema</button>
+        <button type="button" id="logout-btn">Çıkış yap</button>
+      </nav>
+      <section class="card suggestions hidden" id="suggestions"></section>
+    </aside>
+
+    <main class="feed" id="main"></main>
+  </div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

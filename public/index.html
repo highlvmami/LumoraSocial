@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LumoraSocial</title>
+  <script src="/js/theme.js"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <main class="auth-page">
+    <div class="card auth-box">
+      <div class="brand"><span>Lumora</span>Social</div>
+      <p class="tagline">Arkadaşlarınla paylaş, tepki ver, sohbet et.</p>
+
+      <div class="tabs" role="tablist">
+        <button type="button" class="active" data-tab="login">Giriş yap</button>
+        <button type="button" data-tab="register">Üye ol</button>
+      </div>
+
+      <div class="alert error hidden" id="page-alert"></div>
+
+      <form id="login-form" autocomplete="on">
+        <label for="l-identifier">Kullanıcı adı, e-posta veya telefon</label>
+        <input id="l-identifier" name="identifier" autocomplete="username" required>
+        <label for="l-password">Şifre</label>
+        <input id="l-password" name="password" type="password" autocomplete="current-password" required>
+        <div class="form-links"><a href="/sifremi-unuttum">Şifremi unuttum</a></div>
+        <div class="alert error hidden" id="login-alert"></div>
+        <button class="btn block" type="submit">Giriş yap</button>
+      </form>
+
+      <form id="register-form" class="hidden" autocomplete="on">
+        <div class="segmented" id="register-method" role="radiogroup" aria-label="Kayıt yöntemi">
+          <button type="button" data-method="email" class="active">E-posta</button>
+          <button type="button" data-method="phone">Telefon</button>
+          <button type="button" data-method="username">Kullanıcı adı</button>
+        </div>
+        <input type="hidden" name="method" value="email">
+
+        <label for="r-display">Adın</label>
+        <input id="r-display" name="displayName" maxlength="50" placeholder="Görünecek isim" required>
+
+        <div data-for="email">
+          <label for="r-email">E-posta</label>
+          <input id="r-email" name="email" type="email" autocomplete="email" placeholder="ornek@mail.com">
+        </div>
+        <div data-for="phone" class="hidden">
+          <label for="r-phone">Telefon</label>
+          <input id="r-phone" name="phone" type="tel" autocomplete="tel" placeholder="0532 123 45 67">
+        </div>
+
+        <label for="r-username">Kullanıcı adı</label>
+        <input id="r-username" name="username" minlength="3" maxlength="24" pattern="[a-zA-Z0-9_.]+"
+               title="Harf, rakam, nokta ve alt çizgi" autocomplete="username" placeholder="profil adresin olur" required>
+        <label for="r-password">Şifre</label>
+        <input id="r-password" name="password" type="password" minlength="8" autocomplete="new-password"
+               placeholder="En az 8 karakter" required>
+        <label for="r-password2">Şifre (tekrar)</label>
+        <input id="r-password2" name="passwordConfirm" type="password" minlength="8" autocomplete="new-password" required>
+        <p class="muted small method-note" id="method-note">E-postana bir doğrulama bağlantısı göndereceğiz.</p>
+        <div class="alert error hidden" id="register-alert"></div>
+        <button class="btn block" type="submit">Üye ol</button>
+      </form>
+
+      <div id="social" class="social hidden">
+        <div class="divider"><span>veya</span></div>
+        <div class="social-buttons" id="social-buttons"></div>
+      </div>
+    </div>
+  </main>
+  <a class="corner-link" href="/admin-giris">Admin girişi</a>
+  <button type="button" class="theme-toggle" data-theme-toggle>Koyu tema</button>
+  <script type="module" src="/js/auth.js"></script>
+</body>
+</html>

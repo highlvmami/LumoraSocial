@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yönetici Girişi · LumoraSocial</title>
+  <script src="/js/theme.js"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <main class="auth-page">
+    <div class="card auth-box">
+      <div class="brand"><span>Lumora</span>Social</div>
+      <p class="tagline"><span class="badge-admin">Yönetici</span></p>
+
+      <div class="tabs" role="tablist">
+        <button type="button" class="active" data-tab="login">Yönetici girişi</button>
+        <button type="button" data-tab="setup">İlk yönetici kaydı</button>
+      </div>
+
+      <form id="login-form">
+        <label for="l-username">Kullanıcı adı veya e-posta</label>
+        <input id="l-username" name="identifier" autocomplete="username" required>
+        <label for="l-password">Şifre</label>
+        <input id="l-password" name="password" type="password" autocomplete="current-password" required>
+        <div class="alert error hidden" id="login-alert"></div>
+        <button class="btn block" type="submit">Yönetim paneline gir</button>
+      </form>
+
+      <div id="setup-closed" class="alert hidden"></div>
+
+      <form id="setup-form" class="hidden">
+        <p class="muted small">Bu kayıt yalnızca bir kez yapılabilir ve sunucuda tanımlı gizli anahtarı (KEY) ister.</p>
+        <label for="s-key">Anahtar (KEY)</label>
+        <input id="s-key" name="key" type="password" autocomplete="off" required>
+        <label for="s-display">Adın</label>
+        <input id="s-display" name="displayName" maxlength="50" required>
+        <label for="s-username">Kullanıcı adı</label>
+        <input id="s-username" name="username" minlength="3" maxlength="24" pattern="[a-zA-Z0-9_.]+"
+               title="Harf, rakam, nokta ve alt çizgi" autocomplete="username" required>
+        <label for="s-password">Şifre</label>
+        <input id="s-password" name="password" type="password" minlength="8" autocomplete="new-password"
+               placeholder="En az 8 karakter" required>
+        <label for="s-password2">Şifre (tekrar)</label>
+        <input id="s-password2" name="passwordConfirm" type="password" minlength="8" autocomplete="new-password" required>
+        <div class="alert error hidden" id="setup-alert"></div>
+        <button class="btn block" type="submit">Yönetici hesabını oluştur</button>
+      </form>
+    </div>
+  </main>
+  <a class="corner-link" href="/">← Üye girişi</a>
+  <button type="button" class="theme-toggle" data-theme-toggle>Koyu tema</button>
+  <script type="module" src="/js/admin-login.js"></script>
+</body>
+</html>

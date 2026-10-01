@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yönetim Paneli · LumoraSocial</title>
+  <script src="/js/theme.js"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="admin-layout">
+    <header class="admin-top">
+      <div>
+        <div class="brand"><span>Lumora</span>Social <span class="badge-admin">Yönetim</span></div>
+        <div class="muted small" id="whoami"></div>
+      </div>
+      <div>
+        <button type="button" class="theme-toggle" data-theme-toggle>Koyu tema</button>
+        <a class="btn ghost" href="/akis">Akışa git</a>
+        <button class="btn ghost" id="logout-btn" type="button">Çıkış yap</button>
+      </div>
+    </header>
+
+    <nav class="tabs feed-tabs admin-tabs wide">
+      <a href="#kullanicilar" data-view="users" class="active">Kullanıcılar</a>
+      <a href="#sikayetler" data-view="reports">Şikâyetler <span class="tab-count hidden" id="report-count"></span></a>
+      <a href="#kayitlar" data-view="logs">Kayıtlar</a>
+    </nav>
+
+    <div id="view-users">
+    <section class="stat-grid" id="stats"></section>
+
+    <div class="admin-grid">
+      <section class="card panel">
+        <div class="panel-head">
+          <h2>Kullanıcılar</h2>
+          <input type="search" id="search" placeholder="Ara (isim veya kullanıcı adı)">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Kullanıcı</th><th>Rol</th><th>Durum</th><th>Paylaşım</th><th>İşlemler</th></tr>
+            </thead>
+            <tbody id="users"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card panel">
+        <h2>Yeni kullanıcı ekle</h2>
+        <p class="muted small">Yeni bir yönetici veya üye hesabı oluşturun.</p>
+        <form id="create-form">
+          <label for="c-display">İsim</label>
+          <input id="c-display" name="displayName" maxlength="50" required>
+          <label for="c-username">Kullanıcı adı</label>
+          <input id="c-username" name="username" minlength="3" maxlength="24" pattern="[a-zA-Z0-9_.]+" autocomplete="off" required>
+          <label for="c-password">Geçici şifre</label>
+          <input id="c-password" name="password" type="password" minlength="8" autocomplete="new-password" required>
+          <label for="c-role">Rol</label>
+          <select id="c-role" name="role">
+            <option value="admin">Yönetici</option>
+            <option value="member">Üye</option>
+          </select>
+          <div class="alert hidden" id="create-alert"></div>
+          <button class="btn block" type="submit">Oluştur</button>
+        </form>
+      </section>
+    </div>
+    </div>
+
+    <div id="view-reports" class="hidden">
+      <section class="card panel">
+        <div class="panel-head">
+          <h2>Şikâyetler</h2>
+          <select id="report-status" class="auto-width">
+            <option value="open">Bekleyenler</option>
+            <option value="resolved">Çözülenler</option>
+            <option value="dismissed">Yok sayılanlar</option>
+            <option value="all">Tümü</option>
+          </select>
+        </div>
+        <div id="reports"></div>
+        <div class="center-text"><button class="btn ghost hidden" id="reports-more" type="button">Daha fazla yükle</button></div>
+      </section>
+    </div>
+
+    <div id="view-logs" class="hidden">
+      <section class="stat-grid three" id="log-summary"></section>
+      <section class="card panel">
+        <div class="panel-head">
+          <h2>Kayıtlar</h2>
+          <div class="log-filters">
+            <select id="log-category">
+              <option value="">Tüm olaylar</option>
+              <option value="register">🆕 Üye kayıtları</option>
+              <option value="login">Girişler / çıkışlar</option>
+              <option value="login_failed">Başarısız girişler</option>
+              <option value="account">Hesap değişiklikleri</option>
+              <option value="admin">Yönetici işlemleri</option>
+              <option value="content">Paylaşımlar</option>
+              <option value="reports">Şikâyetler</option>
+            </select>
+            <input type="search" id="log-search" placeholder="Kullanıcı, IP veya ayrıntı ara">
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="log-table">
+            <thead><tr><th>Zaman</th><th>Olay</th><th>Kim</th><th>Ayrıntı</th><th>IP · Cihaz</th></tr></thead>
+            <tbody id="logs"></tbody>
+          </table>
+        </div>
+        <div class="center-text"><button class="btn ghost hidden" id="logs-more" type="button">Daha fazla yükle</button></div>
+      </section>
+    </div>
+  </div>
+  <script type="module" src="/js/admin.js"></script>
+</body>
+</html>
