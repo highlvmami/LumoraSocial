@@ -20,6 +20,7 @@ export const config = {
   turso: {
     url: process.env.TURSO_DATABASE_URL || '',
     authToken: process.env.TURSO_AUTH_TOKEN || '',
+    mode: process.env.TURSO_MODE || 'remote',
     replicaPath: path.resolve(rootDir, process.env.TURSO_REPLICA_PATH || 'data/turso-replica.db'),
   },
   sessionSecret: process.env.SESSION_SECRET || '',

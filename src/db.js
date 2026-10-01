@@ -7,15 +7,18 @@ fs.mkdirSync(path.dirname(config.dbPath), { recursive: true });
 
 /*
  * Turso ayarlıysa (TURSO_DATABASE_URL + TURSO_AUTH_TOKEN) veriler bulutta tutulur:
- * okumalar sunucudaki yerel kopyadan yapılır, yazmalar doğrudan Turso'ya gider.
+ * her sorgu doğrudan Turso'ya gider (TURSO_MODE=replica ise okumalar sunucudaki yerel kopyadan yapılır).
  * Ayarlı değilse her şey DB_PATH'teki yerel dosyada kalır.
  */
 const remote = Boolean(config.turso.url);
-const raw = remote
-  ? new Database(config.turso.replicaPath, { syncUrl: config.turso.url, authToken: config.turso.authToken })
-  : new Database(config.dbPath);
-if (remote) raw.sync();
-else raw.exec('PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;');
+const replica = remote && config.turso.mode === 'replica';
+const raw = !remote
+  ? new Database(config.dbPath)
+  : replica
+    ? new Database(config.turso.replicaPath, { syncUrl: config.turso.url, authToken: config.turso.authToken })
+    : new Database(config.turso.url, { authToken: config.turso.authToken });
+if (replica) raw.sync();
+if (!remote) raw.exec('PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;');
 raw.exec('PRAGMA foreign_keys = ON;');
 
 // libsql her satıra bir `_metadata` alanı ekliyor; yanıtlara sızmasın diye temizlenir.
