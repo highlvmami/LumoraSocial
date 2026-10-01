@@ -31,10 +31,7 @@ const nameOf = (id) => (id ? db.prepare('SELECT username FROM users WHERE id = ?
 export function log(req, action, { actorId, targetId = null, data = {} } = {}) {
   try {
     const actor = actorId !== undefined ? actorId : req?.user?.id ?? null;
-    db.prepare(
-      `INSERT INTO audit_logs (action, actor_id, actor_name, target_id, target_name, ip, device, data)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-    ).run(
+    const values = [
       action,
       actor,
       nameOf(actor),
@@ -42,8 +39,19 @@ export function log(req, action, { actorId, targetId = null, data = {} } = {}) {
       nameOf(targetId),
       req ? clientIp(req) : '',
       req ? parseUserAgent(req.get('user-agent')).label : '',
-      JSON.stringify(data)
-    );
+      JSON.stringify(data),
+    ];
+    // Yazma, yanıt gönderildikten sonra yapılır (bulut veritabanında her yazma zaman alır)
+    setImmediate(() => {
+      try {
+        db.prepare(
+          `INSERT INTO audit_logs (action, actor_id, actor_name, target_id, target_name, ip, device, data)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        ).run(...values);
+      } catch (err) {
+        console.error('[log] kaydedilemedi:', err.message);
+      }
+    });
   } catch (err) {
     console.error('[log] kaydedilemedi:', err.message);
   }
