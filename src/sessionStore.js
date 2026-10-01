@@ -48,8 +48,14 @@ export class SqliteSessionStore extends session.Store {
     }
   }
 
+  // Her istekte veritabanına yazmamak için süre en fazla 10 dakikada bir uzatılır
   touch(sid, sess, cb) {
     try {
+      this.lastTouch ??= new Map();
+      const now = Date.now();
+      if (now - (this.lastTouch.get(sid) || 0) < 10 * 60 * 1000) return cb?.(null);
+      this.lastTouch.set(sid, now);
+      if (this.lastTouch.size > 10000) this.lastTouch.clear();
       this.touchStmt.run(this.expiresOf(sess), sid);
       cb?.(null);
     } catch (err) {
