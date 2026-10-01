@@ -195,7 +195,7 @@ input:focus, textarea:focus, select:focus { outline: 2px solid var(--primary); o
 }
 .icon-btn:hover { background: var(--surface-2); color: var(--danger); }
 
-.reactions { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.reactions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
 .reaction {
   border: 1px solid var(--border); background: var(--surface); border-radius: 999px;
   padding: 3px 10px; font: inherit; font-size: 14px; cursor: pointer; color: var(--text);
@@ -205,7 +205,19 @@ input:focus, textarea:focus, select:focus { outline: 2px solid var(--primary); o
 .reaction:hover { background: var(--surface-2); }
 .reaction.mine { border-color: var(--primary); background: var(--primary-soft); }
 .reaction.mine .count { color: var(--primary); }
-.reaction.empty .count { display: none; }
+.reaction-add { position: relative; }
+.reaction-btn {
+  border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 13px; font-weight: 600;
+  padding: 4px 8px; border-radius: 8px; cursor: pointer;
+}
+.reaction-btn:hover { background: var(--surface-2); color: var(--primary); }
+.reaction-picker {
+  position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 30; display: flex; gap: 2px; padding: 4px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 999px; box-shadow: var(--shadow);
+}
+.reaction-picker .pick { border: 0; background: transparent; font-size: 20px; line-height: 1; padding: 6px; border-radius: 50%; cursor: pointer; transition: transform .12s; }
+.reaction-picker .pick:hover { transform: scale(1.2); background: var(--surface-2); }
+.reaction-picker .pick.mine { background: var(--primary-soft); }
 
 .comments { padding-top: 10px; display: flex; flex-direction: column; gap: 10px; }
 .comment { display: flex; gap: 10px; }
@@ -521,9 +533,6 @@ td .actions { display: flex; gap: 6px; flex-wrap: wrap; }
 }
 .dropdown-item:hover { background: var(--surface-2); }
 .dropdown-item.danger { color: var(--danger); }
-.bookmark-btn { font-size: 18px; opacity: .65; }
-.bookmark-btn:hover { color: inherit; opacity: 1; }
-.bookmark-btn.active { opacity: 1; }
 .comment-report { visibility: hidden; font-size: 13px; }
 .comment:hover .comment-report { visibility: visible; }
 @media (hover: none) { .comment-report { visibility: visible; } }

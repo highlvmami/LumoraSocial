@@ -118,29 +118,49 @@ const canModify = (ownerId) => ownerId === state.me.id || state.me.role === 'adm
 const profileLink = (user, children) => h('a', { href: `#/u/${encodeURIComponent(user.username)}` }, children);
 
 function renderReactions(post, container) {
-  container.replaceChildren(
-    ...post.reactions.map((r) =>
+  const toggle = async (emoji) => {
+    try {
+      const res = await api(`/posts/${post.id}/reactions`, { method: 'POST', body: { emoji } });
+      post.reactions = res.reactions;
+      renderReactions(post, container);
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  };
+
+  // Yalnızca tepki almış emojiler görünür; yenisi "Tepki ver" ile açılan küçük panelden seçilir
+  const chips = post.reactions
+    .filter((r) => r.count)
+    .map((r) =>
       h(
         'button',
-        {
-          type: 'button',
-          class: `reaction ${r.mine ? 'mine' : ''} ${r.count ? '' : 'empty'}`,
-          title: r.mine ? 'Tepkini geri al' : 'Tepki ver',
-          onclick: async () => {
-            try {
-              const res = await api(`/posts/${post.id}/reactions`, { method: 'POST', body: { emoji: r.emoji } });
-              post.reactions = res.reactions;
-              renderReactions(post, container);
-            } catch (err) {
-              toast(err.message, 'error');
-            }
-          },
-        },
+        { type: 'button', class: `reaction ${r.mine ? 'mine' : ''}`, title: r.mine ? 'Tepkini geri al' : 'Sen de ekle', onclick: () => toggle(r.emoji) },
         h('span', {}, r.emoji),
         h('span', { class: 'count' }, r.count)
       )
+    );
+
+  const picker = h(
+    'div',
+    { class: 'reaction-picker hidden', role: 'menu' },
+    ...post.reactions.map((r) =>
+      h('button', { type: 'button', class: `pick ${r.mine ? 'mine' : ''}`, title: r.mine ? 'Tepkini geri al' : 'Tepki ver', onclick: () => (close(), toggle(r.emoji)) }, r.emoji)
     )
   );
+  const wrap = h('div', { class: 'reaction-add' });
+  const close = () => {
+    picker.classList.add('hidden');
+    document.removeEventListener('click', outside, true);
+  };
+  const outside = (e) => !wrap.contains(e.target) && close();
+  const btn = h('button', { type: 'button', class: 'reaction-btn' }, 'Tepki ver');
+  btn.addEventListener('click', () => {
+    if (picker.classList.toggle('hidden')) close();
+    else document.addEventListener('click', outside, true);
+  });
+  wrap.append(btn, picker);
+
+  container.replaceChildren(wrap, ...chips);
 }
 
 function renderComments(post, container) {
@@ -214,7 +234,6 @@ function renderPost(post) {
         profileLink(post.author, usernameWithBadge(post.author)),
         h('div', { class: 'muted small' }, `${post.author.displayName} · ${timeAgo(post.createdAt)}`)
       ),
-      bookmarkButton(post),
       postMenu(post, () => el)
     ),
     post.content ? h('div', { class: 'post-body' }, linkifyTags(post.content)) : null,
@@ -223,28 +242,6 @@ function renderPost(post) {
     comments
   );
   return el;
-}
-
-/** Kaydet düğmesi */
-function bookmarkButton(post) {
-  const btn = h('button', { type: 'button', class: 'icon-btn bookmark-btn' });
-  const paint = () => {
-    btn.textContent = post.bookmarked ? 'Kaydedildi' : 'Kaydet';
-    btn.classList.toggle('active', post.bookmarked);
-    btn.title = post.bookmarked ? 'Kaydedilenlerden çıkar' : 'Kaydet';
-    btn.setAttribute('aria-label', btn.title);
-  };
-  btn.addEventListener('click', async () => {
-    try {
-      post.bookmarked = (await api(`/posts/${post.id}/bookmark`, { method: 'POST', body: {} })).bookmarked;
-      paint();
-      toast(post.bookmarked ? 'Kaydedilenlere eklendi.' : 'Kaydedilenlerden çıkarıldı.');
-    } catch (err) {
-      toast(err.message, 'error');
-    }
-  });
-  paint();
-  return btn;
 }
 
 /** Engelle (onaylı). Engellenince sayfa yenilenir; o kişinin içerikleri kaybolur. */
@@ -263,10 +260,22 @@ Birbirinizin paylaşımlarını ve yorumlarını görmezsiniz, takip ve mesajla�
   }
 }
 
-/** Paylaşımın ⋯ menüsü: şikâyet et, engelle, sil */
+/** Paylaşımın ⋯ menüsü: kaydet, şikâyet et, engelle, sil */
 function postMenu(post, getEl) {
   const mine = post.author.id === state.me.id;
   return dropdown([
+    {
+      label: post.bookmarked ? 'Kaydedilenlerden çıkar' : 'Kaydet',
+      onClick: async (item) => {
+        try {
+          post.bookmarked = (await api(`/posts/${post.id}/bookmark`, { method: 'POST', body: {} })).bookmarked;
+          item.textContent = post.bookmarked ? 'Kaydedilenlerden çıkar' : 'Kaydet';
+          toast(post.bookmarked ? 'Kaydedilenlere eklendi.' : 'Kaydedilenlerden çıkarıldı.');
+        } catch (err) {
+          toast(err.message, 'error');
+        }
+      },
+    },
     !mine && { label: 'Şikâyet et', onClick: () => openReportDialog('post', post.id, 'Bu paylaşım') },
     !mine && { label: `@${post.author.username} kullanıcısını engelle`, onClick: () => blockUser(post.author), danger: true },
     canModify(post.author.id) && {
