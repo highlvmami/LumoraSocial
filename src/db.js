@@ -27,15 +27,25 @@ const clean = (row) => {
   return row;
 };
 
+// Uzun süren sorgular sunucu kaydına yazılır (Turso bağlantı hızını izlemek için)
+const SLOW_MS = Number(process.env.DB_SLOW_MS) || 300;
+function timed(label, sql, fn) {
+  const start = performance.now();
+  const result = fn();
+  const ms = performance.now() - start;
+  if (ms > SLOW_MS) console.log('[db] yavaş ' + label + ' ' + Math.round(ms) + ' ms: ' + sql.replace(/s+/g, ' ').slice(0, 80));
+  return result;
+}
+
 class Statement {
-  constructor(stmt) { this.stmt = stmt; }
-  get(...args) { return clean(this.stmt.get(...args)); }
-  all(...args) { return this.stmt.all(...args).map(clean); }
-  run(...args) { return this.stmt.run(...args); }
+  constructor(stmt, sql) { this.stmt = stmt; this.sql = sql; }
+  get(...args) { return timed('get', this.sql, () => clean(this.stmt.get(...args))); }
+  all(...args) { return timed('all', this.sql, () => this.stmt.all(...args).map(clean)); }
+  run(...args) { return timed('run', this.sql, () => this.stmt.run(...args)); }
 }
 
 export const db = {
-  prepare: (sql) => new Statement(raw.prepare(sql)),
+  prepare: (sql) => timed('prepare', sql, () => new Statement(raw.prepare(sql), sql)),
   exec: (sql) => raw.exec(sql),
 };
 
