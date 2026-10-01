@@ -38,6 +38,8 @@ function renderUnread() {
     el.textContent = n > 99 ? '99+' : n;
     el.classList.toggle('hidden', !n);
   }
+  // Mobilde menü kapalıyken okunmamışlar menü düğmesindeki noktayla gösterilir
+  document.getElementById('menu-dot').classList.toggle('hidden', !(state.unread || state.unreadMessages));
 }
 
 async function refreshMyStats() {
@@ -688,6 +690,19 @@ document.getElementById('side-search').addEventListener('submit', (e) => {
   const q = e.target.q.value.trim();
   location.hash = searchHref(q);
   e.target.reset();
+});
+// Mobil menü (çekmece): menü düğmesiyle açılır, bir sayfaya geçince kapanır ve sayfanın başına gidilir
+const setDrawer = (open) => {
+  document.body.classList.toggle('drawer-open', open);
+  document.getElementById('menu-btn').setAttribute('aria-expanded', String(open));
+};
+document.getElementById('menu-btn').addEventListener('click', () => setDrawer(!document.body.classList.contains('drawer-open')));
+document.getElementById('drawer-backdrop').addEventListener('click', () => setDrawer(false));
+document.addEventListener('keydown', (e) => e.key === 'Escape' && setDrawer(false));
+document.getElementById('nav').addEventListener('click', (e) => e.target.closest('a') && setDrawer(false));
+window.addEventListener('hashchange', () => {
+  setDrawer(false);
+  window.scrollTo(0, 0);
 });
 window.addEventListener('hashchange', route);
 setInterval(refreshUnread, 30 * 1000);
