@@ -29,6 +29,7 @@ import { startSession } from '../services/session.js';
 import { consumeCode, consumeLinkToken } from '../services/tokens.js';
 import { sendEmailVerification, sendPasswordReset, sendPhoneCode } from '../services/verification.js';
 import { enabledProviders } from '../services/oauthProviders.js';
+import { smsConfigured } from '../services/sms.js';
 
 const router = Router();
 
@@ -53,7 +54,8 @@ router.get('/me', (req, res) => {
 });
 
 /** Giriş ekranında hangi sosyal giriş butonlarının gösterileceği. */
-router.get('/providers', (_req, res) => res.json({ providers: enabledProviders() }));
+// sms: SMS sağlayıcısı ayarlı değilse telefonla kayıt/doğrulama arayüzde gizlenir
+router.get('/providers', (_req, res) => res.json({ providers: enabledProviders(), sms: smsConfigured }));
 
 /**
  * Kayıt. method: 'username' | 'email' | 'phone'.

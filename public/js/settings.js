@@ -281,7 +281,7 @@ async function accountTab(ctx) {
   );
 
   /* Bağlı hesaplar */
-  const { accounts } = await api('/account/linked');
+  const [{ accounts }, { sms }] = await Promise.all([api('/account/linked'), api('/auth/providers')]);
   const linkAlert = alertBox();
   const linkedSection = section(
     'Bağlı hesaplar',
@@ -320,7 +320,7 @@ async function accountTab(ctx) {
     linkAlert
   );
 
-  return [section('Kullanıcı adı', 'Profil adresin: /u/kullanici-adin', unForm, unAlert), emailSection, phoneSection, linkedSection];
+  return [section('Kullanıcı adı', 'Profil adresin: /u/kullanici-adin', unForm, unAlert), emailSection, sms || me.phone ? phoneSection : null, linkedSection].filter(Boolean);
 }
 
 /* ---------------- Güvenlik ---------------- */

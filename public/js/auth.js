@@ -46,7 +46,8 @@ handleForm(reg, document.getElementById('register-alert'), async (data) => {
 
 /* Sosyal giriş butonları (yalnızca .env'de ayarlı olanlar) */
 const icons = { google: 'G', github: 'GH' };
-api('/auth/providers').then(({ providers }) => {
+api('/auth/providers').then(({ providers, sms }) => {
+  if (!sms) document.querySelector('#register-method [data-method="phone"]')?.remove();
   if (!providers.length) return;
   document.getElementById('social').classList.remove('hidden');
   document.getElementById('social-buttons').replaceChildren(
