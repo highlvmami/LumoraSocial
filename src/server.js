@@ -91,6 +91,7 @@ app.get('/sifremi-unuttum', page('forgot.html'));
 app.get('/sifre-sifirla', page('forgot.html'));
 app.get('/eposta-dogrula', emailVerifyPage);
 app.get('/dogrulama-sonucu', page('verified.html'));
+app.get(['/gizlilik', '/kosullar'], page('gizlilik.html'));
 app.get('/yonetim', (req, res) => {
   if (req.user?.role === 'admin') return page('admin.html')(req, res);
   res.redirect(req.user ? '/akis' : '/admin-giris');

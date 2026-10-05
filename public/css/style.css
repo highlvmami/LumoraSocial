@@ -583,3 +583,10 @@ select.auto-width { width: auto; }
   body.drawer-open .drawer-backdrop { display: block; position: fixed; inset: 0; z-index: 44; background: rgba(10, 10, 25, .45); }
   body.drawer-open { overflow: hidden; }
 }
+
+/* ================= Gizlilik / koşullar ================= */
+.legal-page { padding: 32px 16px 64px; }
+.legal-box { max-width: 720px; margin: 0 auto; padding: 28px; }
+.legal-box .brand { display: inline-block; margin-bottom: 16px; color: var(--text); }
+.legal-box h2 { margin-top: 24px; }
+.legal-box p { line-height: 1.65; }
