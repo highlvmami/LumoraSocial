@@ -31,7 +31,6 @@ function renderProfileCard() {
     ].filter(Boolean)
   );
   document.getElementById('nav-me').href = `#/u/${encodeURIComponent(me.username)}`;
-  document.getElementById('bottom-me').href = `#/u/${encodeURIComponent(me.username)}`;
   document.getElementById('nav-admin').classList.toggle('hidden', me.role !== 'admin');
 }
 
@@ -42,7 +41,7 @@ function renderUnread() {
     el.classList.toggle('hidden', !n);
   }
   // Mobilde menü kapalıyken okunmamışlar menü düğmesindeki noktayla gösterilir
-  document.getElementById('menu-dot').classList.toggle('hidden', !(state.unread || state.unreadMessages));
+  for (const id of ['menu-dot', 'menu-dot-bottom']) document.getElementById(id).classList.toggle('hidden', !(state.unread || state.unreadMessages));
 }
 
 async function refreshMyStats() {
@@ -895,7 +894,9 @@ const setDrawer = (open) => {
   document.body.classList.toggle('drawer-open', open);
   document.getElementById('menu-btn').setAttribute('aria-expanded', String(open));
 };
-document.getElementById('menu-btn').addEventListener('click', () => setDrawer(!document.body.classList.contains('drawer-open')));
+// Menüdeki profil kartına dokununca kendi profiline git
+document.getElementById('profile-card').addEventListener('click', () => (location.hash = `#/u/${encodeURIComponent(state.me.username)}`));
+for (const id of ['menu-btn', 'bottom-menu']) document.getElementById(id).addEventListener('click', () => setDrawer(!document.body.classList.contains('drawer-open')));
 document.getElementById('drawer-backdrop').addEventListener('click', () => setDrawer(false));
 document.addEventListener('keydown', (e) => e.key === 'Escape' && setDrawer(false));
 document.getElementById('nav').addEventListener('click', (e) => e.target.closest('a') && setDrawer(false));
