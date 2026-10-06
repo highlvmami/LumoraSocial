@@ -1,4 +1,5 @@
 import { db } from '../db.js';
+import { removeUpload } from '../uploads.js';
 
 /* Birebir mesajlaşma. İki kullanıcı arasında tek bir sohbet (conversation) vardır. */
 
@@ -24,10 +25,10 @@ function getOrCreateConversation(userId, otherId) {
   return findConversation(userId, otherId);
 }
 
-export function sendMessage(senderId, recipientId, content) {
+export function sendMessage(senderId, recipientId, content, imageUrl = null) {
   const conv = getOrCreateConversation(senderId, recipientId);
   const id = Number(
-    db.prepare('INSERT INTO messages (conversation_id, sender_id, content) VALUES (?, ?, ?)').run(conv.id, senderId, content).lastInsertRowid
+    db.prepare('INSERT INTO messages (conversation_id, sender_id, content, image_url) VALUES (?, ?, ?, ?)').run(conv.id, senderId, content, imageUrl).lastInsertRowid
   );
   db.prepare("UPDATE conversations SET last_message_id = ?, updated_at = datetime('now') WHERE id = ?").run(id, conv.id);
   return getMessage(id);
@@ -38,6 +39,7 @@ function toMessage(m) {
     id: m.id,
     senderId: m.sender_id,
     content: m.deleted ? '' : m.content,
+    imageUrl: m.deleted ? null : m.image_url ?? null,
     deleted: Boolean(m.deleted),
     read: Boolean(m.read_at),
     createdAt: m.created_at,
@@ -73,7 +75,10 @@ export function markRead(conversationId, readerId) {
 
 /** Kendi mesajını siler ("Bu mesaj silindi" olarak görünür). */
 export function deleteMessage(messageId, userId) {
-  return db.prepare("UPDATE messages SET deleted = 1, content = '' WHERE id = ? AND sender_id = ?").run(messageId, userId).changes > 0;
+  const image = db.prepare('SELECT image_url FROM messages WHERE id = ? AND sender_id = ?').get(messageId, userId)?.image_url;
+  const ok = db.prepare("UPDATE messages SET deleted = 1, content = '', image_url = NULL WHERE id = ? AND sender_id = ?").run(messageId, userId).changes > 0;
+  if (ok) removeUpload(image);
+  return ok;
 }
 
 export function listConversations(userId) {
@@ -81,7 +86,7 @@ export function listConversations(userId) {
     .prepare(
       `SELECT c.id, c.updated_at,
               u.id AS other_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified,
-              m.content AS last_content, m.sender_id AS last_sender, m.deleted AS last_deleted, m.created_at AS last_at,
+              m.content AS last_content, m.image_url AS last_image, m.sender_id AS last_sender, m.deleted AS last_deleted, m.created_at AS last_at,
               (SELECT COUNT(*) FROM messages x WHERE x.conversation_id = c.id AND x.sender_id <> ? AND x.read_at IS NULL) AS unread
        FROM conversations c
        JOIN users u ON u.id = CASE WHEN c.user_a = ? THEN c.user_b ELSE c.user_a END
@@ -95,7 +100,7 @@ export function listConversations(userId) {
       user: userOf(r),
       unread: r.unread,
       lastMessage: {
-        content: r.last_deleted ? '' : r.last_content,
+        content: r.last_deleted ? '' : r.last_content || (r.last_image ? 'Fotoğraf' : ''),
         deleted: Boolean(r.last_deleted),
         mine: r.last_sender === userId,
         createdAt: r.last_at,

@@ -666,3 +666,9 @@ body.story-open { overflow: hidden; }
 .comment-input { flex: 1; min-width: 0; }
 .comment-input input { width: 100%; }
 .composer .mention-wrap textarea { width: 100%; }
+
+/* ================= Mesajlarda fotoğraf ve "yazıyor" ================= */
+.msg-image { display: block; max-width: 240px; max-height: 320px; border-radius: 12px; cursor: zoom-in; margin-bottom: 4px; object-fit: cover; }
+.chat-photo { flex: 0 0 auto; }
+.chat-photo.busy { opacity: .5; pointer-events: none; }
+.chat-typing { padding: 4px 16px 0; font-size: 13px; color: var(--muted); font-style: italic; }

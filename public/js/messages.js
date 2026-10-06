@@ -1,4 +1,4 @@
-import { api, avatar, h, handleForm, nameWithBadge, timeAgo } from './common.js';
+import { api, avatar, h, handleForm, nameWithBadge, openLightbox, resizeImage, timeAgo, toast } from './common.js';
 
 /* Mesajlar: #/mesajlar (sohbet listesi) ve #/mesajlar/:kullaniciAdi (sohbet ekranı) */
 
@@ -66,9 +66,12 @@ async function showChat(ctx, username) {
   const thread = h('div', { class: 'chat-thread' });
   const moreBtn = h('button', { class: 'btn ghost sm hidden load-more', type: 'button' }, 'Daha eski mesajlar');
   const input = h('textarea', { name: 'content', rows: 1, maxlength: 2000, placeholder: 'Mesaj yaz…', required: true, autocomplete: 'off' });
-  const form = h('form', { class: 'chat-form' }, input, h('button', { class: 'btn', type: 'submit' }, 'Gönder'));
+  const fileInput = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp', class: 'visually-hidden' });
+  const photoBtn = h('label', { class: 'btn ghost chat-photo', title: 'Fotoğraf gönder' }, 'Fotoğraf', fileInput);
+  const form = h('form', { class: 'chat-form' }, photoBtn, input, h('button', { class: 'btn', type: 'submit' }, 'Gönder'));
+  const typingEl = h('div', { class: 'chat-typing hidden' });
   const header = h('div', { class: 'chat-header' });
-  main.replaceChildren(h('div', { class: 'feed-header' }, h('a', { href: '#/mesajlar' }, '← Mesajlar')), h('section', { class: 'card chat' }, header, moreBtn, thread, form));
+  main.replaceChildren(h('div', { class: 'feed-header' }, h('a', { href: '#/mesajlar' }, '← Mesajlar')), h('section', { class: 'card chat' }, header, moreBtn, thread, typingEl, form));
 
   let firstId = null;
   let lastId = null;
@@ -79,7 +82,8 @@ async function showChat(ctx, username) {
     const el = h(
       'div',
       { class: `msg ${mine ? 'mine' : ''} ${m.deleted ? 'deleted' : ''}`, dataset: { id: m.id } },
-      h('div', { class: 'msg-text' }, m.deleted ? 'Bu mesaj silindi' : m.content),
+      m.imageUrl ? h('img', { class: 'msg-image', src: m.imageUrl, alt: 'Fotoğraf', loading: 'lazy', onclick: () => openLightbox([{ url: m.imageUrl }]) }) : null,
+      m.deleted || m.content ? h('div', { class: 'msg-text' }, m.deleted ? 'Bu mesaj silindi' : m.content) : null,
       h('div', { class: 'msg-meta' }, clock(m.createdAt), mine && !m.deleted ? (m.read ? ' · Görüldü' : ' · Gönderildi') : '')
     );
     if (mine && !m.deleted) {
@@ -161,6 +165,33 @@ async function showChat(ctx, username) {
     if (stick) scrollDown();
   };
 
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files[0];
+    fileInput.value = '';
+    if (!file) return;
+    photoBtn.classList.add('busy');
+    try {
+      const { blob } = await resizeImage(file, 1600);
+      const text = input.value.trim();
+      const { message } = await api(`/messages/with/${encodeURIComponent(username)}/photo?${new URLSearchParams({ text })}`, { method: 'POST', blob });
+      input.value = '';
+      appendNew([message]);
+      scrollDown();
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      photoBtn.classList.remove('busy');
+    }
+  });
+
+  // Yazarken karşı tarafa "yazıyor..." sinyali (en fazla 3 saniyede bir)
+  let lastTypingPing = 0;
+  input.addEventListener('input', () => {
+    if (!input.value.trim() || Date.now() - lastTypingPing < 3000) return;
+    lastTypingPing = Date.now();
+    api(`/messages/with/${encodeURIComponent(username)}/typing`, { method: 'POST', body: {} }).catch(() => {});
+  });
+
   // Enter gönderir, Shift+Enter yeni satır
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -182,6 +213,8 @@ async function showChat(ctx, username) {
     // Ekrandaki ilk mesajdan itibaren hepsini al: yeniler eklenir, "görüldü" ve silinme durumu güncellenir
     const res = await api(`/messages/with/${encodeURIComponent(username)}${firstId ? `?after=${firstId - 1}` : ''}`);
     appendNew(res.messages.filter((m) => m.id > (lastId ?? 0)));
+    typingEl.textContent = res.typing ? `${u.username} yazıyor…` : '';
+    typingEl.classList.toggle('hidden', !res.typing);
     if (!firstId && res.messages.length) firstId = res.messages[0].id;
     for (const m of res.messages) {
       const el = thread.querySelector(`[data-id="${m.id}"]`);
@@ -193,6 +226,6 @@ async function showChat(ctx, username) {
       }
     }
   };
-  const timer = setInterval(() => (stillOn(hash) ? poll().catch(() => {}) : clearInterval(timer)), 4000);
+  const timer = setInterval(() => (stillOn(hash) ? poll().catch(() => {}) : clearInterval(timer)), 3000);
   input.focus();
 }

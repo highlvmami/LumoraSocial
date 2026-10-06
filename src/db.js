@@ -362,6 +362,11 @@ const migrations = [
   `
   ALTER TABLE story_views ADD COLUMN reaction TEXT;
   `,
+
+  // 12: mesajlarda fotoğraf
+  `
+  ALTER TABLE messages ADD COLUMN image_url TEXT;
+  `,
 ];
 
 function schemaVersion() {
