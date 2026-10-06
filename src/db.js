@@ -335,6 +335,28 @@ const migrations = [
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
   `,
+
+  // 10: hikayeler (24 saat sonra kaybolur)
+  `
+  CREATE TABLE stories (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    image_url  TEXT,
+    text       TEXT NOT NULL DEFAULT '',
+    bg         TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    expires_at INTEGER NOT NULL
+  );
+  CREATE INDEX idx_stories_user ON stories(user_id, id);
+  CREATE INDEX idx_stories_expires ON stories(expires_at);
+
+  CREATE TABLE story_views (
+    story_id  INTEGER NOT NULL REFERENCES stories(id) ON DELETE CASCADE,
+    viewer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    viewed_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (story_id, viewer_id)
+  );
+  `,
 ];
 
 function schemaVersion() {

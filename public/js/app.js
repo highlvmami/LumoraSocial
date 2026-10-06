@@ -1,4 +1,5 @@
 import { api, avatar, dropdown, formatDate, h, handleForm, logout, nameWithBadge, usernameWithBadge, openReportDialog, openLightbox, resizeImage, SOCIALS, socialHref, timeAgo, toast } from './common.js';
+import { storyBar } from './stories.js';
 import { showSettings } from './settings.js';
 import { showNotifications } from './notifications.js';
 import { showMessages } from './messages.js';
@@ -453,6 +454,7 @@ function showFeed(scope) {
     ...[
       h('div', { class: 'feed-header' }, h('h2', {}, 'Akış')),
       verifyBanner(),
+      storyBar(state.me),
       h('nav', { class: 'tabs feed-tabs' }, tab('all', 'Genel akış', '#/'), tab('following', 'Takip ettiklerim', '#/takip')),
     ].filter(Boolean)
   );

@@ -11,7 +11,7 @@ export const likeEscape = (s) => String(s).replace(/[\\%_]/g, (c) => `\\${c}`);
 /** Paylaşımlara verilebilecek emoji tepkileri. Yeni emoji eklemek için listeyi genişletin. */
 export const REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
-const authorOf = (row, prefix = '') => ({
+export const authorOf = (row, prefix = '') => ({
   id: row[`${prefix}user_id`],
   username: row[`${prefix}username`],
   displayName: row[`${prefix}display_name`],

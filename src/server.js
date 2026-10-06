@@ -22,6 +22,8 @@ import { smsConfigured } from './services/sms.js';
 import { enabledProviders } from './services/oauthProviders.js';
 import userRoutes from './routes/users.js';
 import postRoutes from './routes/posts.js';
+import storyRoutes from './routes/stories.js';
+import { cleanupExpiredStories } from './models/stories.js';
 import adminRoutes from './routes/admin.js';
 
 const app = express();
@@ -74,6 +76,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/stories', storyRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Bulunamadı.' }));
 
@@ -123,6 +126,7 @@ app.use((err, _req, res, _next) => {
 const housekeeping = () => {
   cleanupPendingImages();
   cleanupLogs();
+  cleanupExpiredStories();
 };
 housekeeping();
 setInterval(housekeeping, 60 * 60 * 1000).unref();
