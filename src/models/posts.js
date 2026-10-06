@@ -20,10 +20,23 @@ export const authorOf = (row, prefix = '') => ({
   isVerified: Boolean(row[`${prefix}is_verified`]),
 });
 
-/** Paylaşımı oluşturur ve kullanıcının önceden yüklediği (henüz bağlanmamış) fotoğrafları sırasıyla bağlar. */
-export function createPost(userId, content, imageIds = []) {
-  const { lastInsertRowid } = db.prepare('INSERT INTO posts (user_id, content) VALUES (?, ?)').run(userId, content);
+export const POLL_MIN_OPTIONS = 2;
+export const POLL_MAX_OPTIONS = 4;
+
+/**
+ * Paylaşımı oluşturur ve kullanıcının önceden yüklediği (henüz bağlanmamış) fotoğrafları sırasıyla bağlar.
+ * quoteOf: yeniden paylaşılan gönderi; poll: { options: [metin], hours }
+ */
+export function createPost(userId, content, imageIds = [], { quoteOf = null, poll = null } = {}) {
+  const { lastInsertRowid } = db
+    .prepare('INSERT INTO posts (user_id, content, quote_of, has_poll) VALUES (?, ?, ?, ?)')
+    .run(userId, content, quoteOf, poll ? 1 : 0);
   const postId = Number(lastInsertRowid);
+  if (poll) {
+    db.prepare('INSERT INTO polls (post_id, ends_at) VALUES (?, ?)').run(postId, Date.now() + poll.hours * 3600 * 1000);
+    const add = db.prepare('INSERT INTO poll_options (post_id, position, text) VALUES (?, ?, ?)');
+    poll.options.forEach((text, i) => add.run(postId, i, text));
+  }
   const attach = db.prepare('UPDATE post_images SET post_id = ?, position = ? WHERE id = ? AND user_id = ? AND post_id IS NULL');
   imageIds.forEach((id, i) => attach.run(postId, i, id, userId));
   return postId;
@@ -98,7 +111,9 @@ export function getFeed({ viewerId, viewerIsAdmin = false, before = null, limit 
   const visibilityArgs = viewerIsAdmin ? [] : [viewerId, viewerId];
   const rows = db
     .prepare(
-      `SELECT p.id, p.content, p.created_at, u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified
+      `SELECT p.id, p.content, p.created_at, p.quote_of, p.has_poll,
+              (SELECT COUNT(*) FROM posts q WHERE q.quote_of = p.id) AS repost_count,
+              u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified
        FROM posts p JOIN users u ON u.id = p.user_id
        WHERE (? IS NULL OR p.id < ?)
          AND (? IS NULL OR p.user_id = ?)
@@ -121,7 +136,9 @@ export function getFeed({ viewerId, viewerIsAdmin = false, before = null, limit 
 export function getPost(id, viewerId) {
   const row = db
     .prepare(
-      `SELECT p.id, p.content, p.created_at, u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified
+      `SELECT p.id, p.content, p.created_at, p.quote_of, p.has_poll,
+              (SELECT COUNT(*) FROM posts q WHERE q.quote_of = p.id) AS repost_count,
+              u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified
        FROM posts p JOIN users u ON u.id = p.user_id WHERE p.id = ?`
     )
     .get(id);
@@ -138,7 +155,60 @@ function hydratePost(row, viewerId) {
     reactions: getReactionSummary(row.id, viewerId),
     comments: getComments(row.id, viewerId),
     bookmarked: isBookmarked(viewerId, row.id),
+    repostCount: row.repost_count ?? 0,
+    quote: row.quote_of ? getQuoted(row.quote_of, viewerId) : null,
+    poll: row.has_poll ? getPoll(row.id, viewerId, row.user_id) : null,
   };
+}
+
+/** Yeniden paylaşılan (alıntılanan) gönderi; izleyen göremiyorsa yalnızca { hidden: true }. */
+function getQuoted(id, viewerId) {
+  const row = db
+    .prepare(
+      `SELECT p.id, p.content, p.created_at, u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified
+       FROM posts p JOIN users u ON u.id = p.user_id
+       WHERE p.id = ? AND u.status = 'active' AND ${notBlockedSql('p.user_id')} AND ${VISIBLE_AUTHOR_SQL}`
+    )
+    .get(id, viewerId, viewerId, viewerId, viewerId);
+  if (!row) return { hidden: true };
+  return { id: row.id, content: row.content, createdAt: row.created_at, author: authorOf(row), images: getImages(row.id) };
+}
+
+/** Anket: seçenekler, oy sayıları ve izleyenin oyu. Sonuçlar oy verince, anket bitince veya sahibine görünür. */
+export function getPoll(postId, viewerId, ownerId) {
+  const poll = db.prepare('SELECT ends_at FROM polls WHERE post_id = ?').get(postId);
+  if (!poll) return null;
+  const options = db
+    .prepare(
+      `SELECT o.id, o.text, (SELECT COUNT(*) FROM poll_votes v WHERE v.option_id = o.id) AS votes
+       FROM poll_options o WHERE o.post_id = ? ORDER BY o.position`
+    )
+    .all(postId);
+  const myVote = db.prepare('SELECT option_id FROM poll_votes WHERE post_id = ? AND user_id = ?').get(postId, viewerId)?.option_id ?? null;
+  const ended = Date.now() >= poll.ends_at;
+  const showResults = ended || myVote !== null || viewerId === ownerId;
+  return {
+    endsAt: poll.ends_at,
+    ended,
+    myVote,
+    total: options.reduce((n, o) => n + o.votes, 0),
+    options: options.map((o) => ({ id: o.id, text: o.text, votes: showResults ? o.votes : null })),
+  };
+}
+
+/** Oy verir veya oyunu değiştirir; aynı seçeneğe tekrar basınca oy geri alınır. */
+export function votePoll(postId, userId, optionId) {
+  const poll = db.prepare('SELECT ends_at FROM polls WHERE post_id = ?').get(postId);
+  if (!poll) return 'not_found';
+  if (Date.now() >= poll.ends_at) return 'ended';
+  if (!db.prepare('SELECT 1 FROM poll_options WHERE id = ? AND post_id = ?').get(optionId, postId)) return 'bad_option';
+  const current = db.prepare('SELECT option_id FROM poll_votes WHERE post_id = ? AND user_id = ?').get(postId, userId)?.option_id;
+  if (current === optionId) db.prepare('DELETE FROM poll_votes WHERE post_id = ? AND user_id = ?').run(postId, userId);
+  else
+    db.prepare(
+      'INSERT INTO poll_votes (post_id, user_id, option_id) VALUES (?, ?, ?) ON CONFLICT(post_id, user_id) DO UPDATE SET option_id = excluded.option_id'
+    ).run(postId, userId, optionId);
+  return 'ok';
 }
 
 export function getReactionSummary(postId, viewerId) {

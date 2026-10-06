@@ -241,10 +241,104 @@ function renderPost(post) {
     ),
     post.content ? h('div', { class: 'post-body' }, linkifyTags(post.content)) : null,
     postImages(post),
-    reactions,
+    post.poll ? pollView(post) : null,
+    post.quote ? quoteCard(post.quote) : null,
+    h('div', { class: 'post-actions' }, reactions, repostButton(post)),
     comments
   );
   return el;
+}
+
+/** Yeniden paylaşılan gönderinin küçük kartı */
+function quoteCard(q) {
+  if (q.hidden) return h('div', { class: 'quote-card muted small' }, 'Bu paylaşım artık görüntülenemiyor.');
+  return h(
+    'a',
+    { class: 'quote-card', href: `#/p/${q.id}` },
+    h('div', { class: 'quote-head' }, avatar(q.author, 'sm'), h('b', {}, ...usernameWithBadge(q.author)), h('span', { class: 'muted small' }, timeAgo(q.createdAt))),
+    q.content ? h('div', { class: 'quote-body' }, q.content) : null,
+    q.images?.length ? h('img', { class: 'quote-image', src: q.images[0].url, alt: '', loading: 'lazy' }) : null
+  );
+}
+
+function repostButton(post) {
+  const label = post.repostCount ? `Yeniden paylaş · ${post.repostCount}` : 'Yeniden paylaş';
+  return h('button', { type: 'button', class: 'reaction-btn repost-btn', onclick: () => openRepostDialog(post) }, label);
+}
+
+/** Yeniden paylaşma penceresi: isteğe bağlı yorum + alıntılanan gönderi önizlemesi */
+function openRepostDialog(post) {
+  // Alıntının alıntısı yerine asıl gönderi paylaşılır
+  const target = post.quote && !post.quote.hidden && !post.content && !post.images?.length && !post.poll ? post.quote : post;
+  const textarea = h('textarea', { name: 'content', maxlength: 1000, rows: 3, placeholder: 'Bir şey ekle (isteğe bağlı)…' });
+  const alertEl = h('div', { class: 'alert hidden' });
+  const form = h(
+    'form',
+    { class: 'card modal' },
+    h('h2', {}, 'Yeniden paylaş'),
+    h('div', { class: 'mention-wrap' }, textarea, attachMentionAutocomplete(textarea)),
+    quoteCard({ id: target.id, content: target.content, createdAt: target.createdAt, author: target.author, images: target.images }),
+    alertEl,
+    h('div', { class: 'modal-actions' }, h('button', { type: 'button', class: 'btn ghost', 'data-close': true }, 'Vazgeç'), h('button', { type: 'submit', class: 'btn' }, 'Paylaş'))
+  );
+  const backdrop = h('div', { class: 'modal-backdrop' }, form);
+  const close = () => backdrop.remove();
+  backdrop.addEventListener('click', (e) => (e.target === backdrop || e.target.dataset.close !== undefined) && close());
+  handleForm(form, alertEl, async ({ content }) => {
+    const { post: created } = await api('/posts', { method: 'POST', body: { content, quoteOf: target.id } });
+    close();
+    toast('Yeniden paylaşıldı.');
+    const list = main.querySelector('.feed');
+    if (list && ['', '#/', '#/takip'].includes(location.hash)) list.prepend(renderPost(created));
+  });
+  document.body.append(backdrop);
+  textarea.focus();
+}
+
+/** Anket: oy verilmeden seçenekler düğme, sonra yüzdelik çubuklar */
+function pollView(post) {
+  const box = h('div', { class: 'poll' });
+  const paint = () => {
+    const p = post.poll;
+    const showResults = p.options[0]?.votes !== null;
+    const left = p.ended ? 'Sona erdi' : remaining(p.endsAt);
+    box.replaceChildren(
+      ...p.options.map((o) => {
+        const pct = showResults && p.total ? Math.round((o.votes / p.total) * 100) : 0;
+        return h(
+          'button',
+          {
+            type: 'button',
+            class: `poll-option ${showResults ? 'result' : ''} ${p.myVote === o.id ? 'mine' : ''}`,
+            disabled: p.ended,
+            title: p.myVote === o.id ? 'Oyunu geri al' : 'Oy ver',
+            onclick: async () => {
+              try {
+                post.poll = (await api(`/posts/${post.id}/vote`, { method: 'POST', body: { optionId: o.id } })).poll;
+                paint();
+              } catch (err) {
+                toast(err.message, 'error');
+              }
+            },
+          },
+          showResults ? h('span', { class: 'poll-bar', style: { width: `${pct}%` } }) : null,
+          h('span', { class: 'poll-text' }, o.text),
+          showResults ? h('span', { class: 'poll-pct' }, `%${pct}`) : null
+        );
+      }),
+      h('div', { class: 'muted small poll-meta' }, `${p.total} oy · ${left}`)
+    );
+  };
+  paint();
+  return box;
+}
+
+function remaining(endsAt) {
+  const ms = endsAt - Date.now();
+  const h_ = Math.floor(ms / 3600000);
+  if (h_ >= 24) return `${Math.floor(h_ / 24)} gün kaldı`;
+  if (h_ >= 1) return `${h_} saat kaldı`;
+  return `${Math.max(1, Math.ceil(ms / 60000))} dakika kaldı`;
 }
 
 /** Engelle (onaylı). Engellenince sayfa yenilenir; o kişinin içerikleri kaybolur. */
@@ -340,6 +434,7 @@ function composer(onPosted) {
   textarea.addEventListener('input', () => (counter.textContent = `${textarea.value.length} / 1000`));
 
   let images = []; // { id, url } veya yükleniyorsa { uploading: true, preview }
+  let pollOn = false;
   const previews = h('div', { class: 'composer-images' });
   const fileInput = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp', multiple: true, class: 'visually-hidden' });
   const photoBtn = h('label', { class: 'btn sm ghost', title: 'Fotoğraf ekle' }, 'Fotoğraf', fileInput);
@@ -367,7 +462,7 @@ function composer(onPosted) {
         )
       )
     );
-    photoBtn.classList.toggle('hidden', images.length >= MAX_IMAGES);
+    photoBtn.classList.toggle('hidden', pollOn || images.length >= MAX_IMAGES);
     submit.disabled = images.some((i) => i.uploading);
   };
 
@@ -395,18 +490,50 @@ function composer(onPosted) {
     );
   });
 
+  // Anket: 2-4 seçenek ve süre. Açıkken fotoğraf eklenemez.
+  const pollBox = h('div', { class: 'poll-editor hidden' });
+  const optionInput = (i) => h('input', { type: 'text', maxlength: 80, placeholder: `${i + 1}. seçenek`, class: 'poll-option-input' });
+  const durations = [['1', '1 saat'], ['6', '6 saat'], ['24', '1 gün'], ['72', '3 gün'], ['168', '1 hafta']];
+  const durationSel = h('select', { class: 'poll-duration', 'aria-label': 'Anket süresi' }, ...durations.map(([v, l]) => h('option', { value: v, selected: v === '24' }, l)));
+  const addOptionBtn = h('button', { type: 'button', class: 'btn sm ghost' }, '+ Seçenek');
+  const resetPoll = () => {
+    pollBox.replaceChildren(h('div', { class: 'poll-options' }, optionInput(0), optionInput(1)), h('div', { class: 'poll-editor-row' }, addOptionBtn, h('span', { class: 'muted small' }, 'Süre'), durationSel));
+    addOptionBtn.classList.remove('hidden');
+  };
+  addOptionBtn.addEventListener('click', () => {
+    const list = pollBox.querySelector('.poll-options');
+    list.append(optionInput(list.children.length));
+    if (list.children.length >= 4) addOptionBtn.classList.add('hidden');
+  });
+  const pollBtn = h('button', { type: 'button', class: 'btn sm ghost', title: 'Anket ekle' }, 'Anket');
+  pollBtn.addEventListener('click', () => {
+    pollOn = !pollOn;
+    if (pollOn) resetPoll();
+    pollBox.classList.toggle('hidden', !pollOn);
+    pollBtn.classList.toggle('active', pollOn);
+    photoBtn.classList.toggle('hidden', pollOn || images.length >= MAX_IMAGES);
+    if (pollOn) pollBox.querySelector('input').focus();
+  });
+
   const form = h(
     'form',
     { class: 'card composer' },
     h('div', { class: 'mention-wrap' }, textarea, attachMentionAutocomplete(textarea)),
     previews,
-    h('div', { class: 'row' }, h('div', { class: 'row-left' }, photoBtn, counter), submit)
+    pollBox,
+    h('div', { class: 'row' }, h('div', { class: 'row-left' }, photoBtn, pollBtn, counter), submit)
   );
   handleForm(form, null, async ({ content }) => {
+    const poll = pollOn
+      ? { options: [...pollBox.querySelectorAll('.poll-option-input')].map((i) => i.value.trim()).filter(Boolean), hours: Number(durationSel.value) }
+      : null;
+    if (poll && !content.trim()) throw new Error('Anket için bir soru yaz.');
+    if (poll && poll.options.length < 2) throw new Error('En az 2 seçenek yaz.');
     if (!content.trim() && !images.length) throw new Error('Bir şeyler yaz veya fotoğraf ekle.');
-    const { post } = await api('/posts', { method: 'POST', body: { content, imageIds: images.map((i) => i.id) } });
+    const { post } = await api('/posts', { method: 'POST', body: { content, imageIds: images.map((i) => i.id), poll } });
     form.reset();
     images = [];
+    if (pollOn) pollBtn.click();
     paint();
     counter.textContent = '0 / 1000';
     onPosted(post);

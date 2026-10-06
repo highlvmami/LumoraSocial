@@ -367,6 +367,31 @@ const migrations = [
   `
   ALTER TABLE messages ADD COLUMN image_url TEXT;
   `,
+
+  // 13: yeniden paylaşma (alıntı) ve anketler
+  `
+  ALTER TABLE posts ADD COLUMN quote_of INTEGER REFERENCES posts(id) ON DELETE SET NULL;
+  ALTER TABLE posts ADD COLUMN has_poll INTEGER NOT NULL DEFAULT 0;
+  CREATE INDEX idx_posts_quote ON posts(quote_of);
+
+  CREATE TABLE polls (
+    post_id INTEGER PRIMARY KEY REFERENCES posts(id) ON DELETE CASCADE,
+    ends_at INTEGER NOT NULL
+  );
+  CREATE TABLE poll_options (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id  INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    position INTEGER NOT NULL,
+    text     TEXT NOT NULL
+  );
+  CREATE INDEX idx_poll_options_post ON poll_options(post_id, position);
+  CREATE TABLE poll_votes (
+    post_id   INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    option_id INTEGER NOT NULL REFERENCES poll_options(id) ON DELETE CASCADE,
+    PRIMARY KEY (post_id, user_id)
+  );
+  `,
 ];
 
 function schemaVersion() {

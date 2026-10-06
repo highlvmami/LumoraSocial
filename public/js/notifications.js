@@ -13,6 +13,7 @@ const TEMPLATES = {
     '',
     [userLink(n.actor), ' paylaşımına yorum yaptı: ', ...postRef(n), h('div', { class: 'notif-quote' }, n.data.text)],
   ],
+  post_repost: (n) => ['', [userLink(n.actor), ' paylaşımını yeniden paylaştı: ', postLink(n, 'görüntüle'), n.data.text ? h('div', { class: 'notif-quote' }, n.data.text) : null]],
   mention: (n) => [
     '',
     [userLink(n.actor), n.data.inComment ? ' bir yorumda senden bahsetti: ' : ' bir paylaşımda senden bahsetti: ', postLink(n, 'görüntüle'), h('div', { class: 'notif-quote' }, n.data.text)],

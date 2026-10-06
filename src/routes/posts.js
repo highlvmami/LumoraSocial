@@ -20,6 +20,10 @@ import {
   getReactionSummary,
   getComments,
   toggleReaction,
+  votePoll,
+  getPoll,
+  POLL_MIN_OPTIONS,
+  POLL_MAX_OPTIONS,
 } from '../models/posts.js';
 
 import { canViewPostsOf } from '../models/follows.js';
@@ -77,11 +81,36 @@ router.post('/', (req, res) => {
   const imageIds = Array.isArray(req.body.imageIds) ? [...new Set(req.body.imageIds.map(v.id))] : [];
   if (imageIds.length > MAX_POST_IMAGES) throw v.bad(`Bir paylaşıma en fazla ${MAX_POST_IMAGES} fotoğraf eklenebilir.`);
   if (countPendingImages(req.user.id, imageIds) !== imageIds.length) throw v.bad('Fotoğraflardan biri bulunamadı, tekrar yükle.');
-  const content = v.str(req.body.content, { field: 'Paylaşım', min: imageIds.length ? 0 : 1, max: 1000 });
-  const id = createPost(req.user.id, content, imageIds);
+  // Yeniden paylaşma: alıntılanan gönderi görülebilir olmalı; yorum yazmak isteğe bağlı
+  const quoted = req.body.quoteOf ? requirePost(v.id(req.body.quoteOf), req.user) : null;
+  const poll = parsePoll(req.body.poll);
+  if (poll && (quoted || imageIds.length)) throw v.bad('Anket, fotoğraflı veya yeniden paylaşılan gönderiye eklenemez.');
+  const content = v.str(req.body.content, { field: 'Paylaşım', min: imageIds.length || quoted ? 0 : 1, max: 1000 });
+  const id = createPost(req.user.id, content, imageIds, { quoteOf: quoted?.id ?? null, poll });
+  if (quoted && quoted.user_id !== req.user.id) {
+    notify(quoted.user_id, 'post_repost', { actorId: req.user.id, data: { postId: id, preview: preview(quoted.content), text: preview(content, 120) } });
+  }
   log(req, 'post.create', { data: { postId: id, images: imageIds.length, preview: content.slice(0, 60) } });
   notifyMentions({ text: content, actor: req.user, postOwner: req.user, postId: id, postContent: content });
   res.status(201).json({ post: getPost(id, req.user.id) });
+});
+
+function parsePoll(raw) {
+  if (!raw) return null;
+  const options = (Array.isArray(raw.options) ? raw.options : []).map((o) => v.str(o, { field: 'Anket seçeneği', max: 80 })).filter(Boolean);
+  if (options.length < POLL_MIN_OPTIONS || options.length > POLL_MAX_OPTIONS) throw v.bad(`Ankette ${POLL_MIN_OPTIONS}-${POLL_MAX_OPTIONS} seçenek olmalı.`);
+  if (new Set(options.map((o) => o.toLocaleLowerCase('tr'))).size !== options.length) throw v.bad('Anket seçenekleri birbirinden farklı olmalı.');
+  const hours = v.oneOf(Number(raw.hours) || 24, [1, 6, 24, 72, 168], 'Anket süresi');
+  return { options, hours };
+}
+
+/** Ankette oy ver / değiştir / geri al. */
+router.post('/:id/vote', (req, res) => {
+  const post = requirePost(v.id(req.params.id), req.user);
+  const result = votePoll(post.id, req.user.id, v.id(req.body.optionId));
+  if (result === 'ended') throw v.bad('Anket sona erdi.');
+  if (result !== 'ok') throw new v.HttpError(404, 'Anket bulunamadı.');
+  res.json({ poll: getPoll(post.id, req.user.id, post.user_id) });
 });
 
 /** Kaydedilen paylaşımlar. */
