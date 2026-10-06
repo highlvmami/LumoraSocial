@@ -1,0 +1,77 @@
+		LumoraSocial
+		Sürüm Notları
+
+	V1.0  (30.09.2026)
+     - Temel uygulama oluşturuldu (Node.js + Express sunucu, tek sayfa web arayüzü)
+     - Üye ve yönetici rolleri; ilk yönetici kaydı tek seferlik gizli anahtar (KEY) ile
+     - Yönetim paneli: üyeleri yönetme, yönetici ekleme, askıya alma, silme
+     - Solda dikey profil kartı, ortada paylaşım akışı
+     - Paylaşımlara emoji tepkisi ve yorum
+     - Profil yönetimi: isim değiştirme, biyografi, profil ve kapak fotoğrafı
+     - Takip sistemi; "Genel akış" ve "Takip ettiklerim" akışları
+     - Paylaşımlara fotoğraf ekleme (en fazla 4)
+     - E-posta, telefon veya kullanıcı adıyla kayıt; e-posta/telefon doğrulama
+     - Şifremi unuttum, Google ve GitHub ile giriş altyapısı
+     - Oturumlar ve cihazlar, yeni cihaz ve şüpheli giriş bildirimleri
+     - Gizli hesap ve takip istekleri, profil bilgileri için gizlilik seviyeleri
+     - Doğrulama rozeti, kaydedilenler, engelleme, şikâyet, mesajlaşma, bildirimler, arama
+     - Açık/koyu tema; süs emojileri arayüzden kaldırıldı
+
+	V1.1  (01.10.2026)
+     - Mürekkep mavisi renk teması uygulandı, mor-pembe geçişler kaldırıldı
+     - Proje GitHub'a yüklendi
+     - Site internete açıldı: Render (ücretsiz) üzerinde https://lumorasocial.onrender.com
+     - Veriler ve fotoğraflar Turso bulut veritabanına taşındı (sunucu yeniden başlasa da silinmez)
+     - Hız iyileştirmeleri (sorgu önbelleği, kayıtların arka planda yazılması)
+     - Tema seçimi sol menüden kaldırıldı, yalnızca Ayarlar'da
+     - Profil kartında ve paylaşımlarda kullanıcı adı üstte, isim soyisim altta
+     - Takip sayısının boş görünmesi düzeltildi
+     - Arama kutusu üst çubuğa taşındı
+     - "Kaydet" paylaşımın ⋯ menüsüne taşındı; emojiler "Tepki ver" düğmesiyle açılır oldu
+     - Yönetim panelindeki kayıtların görünmemesi düzeltildi; gerçek ziyaretçi IP'si kaydediliyor
+     - Mobilde açılır menü eklendi
+
+	V1.2  (05.10.2026)
+     - SMS servisi olmadığı için telefonla kayıt ve telefon doğrulama gizlendi
+     - E-posta gönderimi Gmail üzerinden çalışır hale getirildi (lumorasocial.destek@gmail.com)
+       (doğrulama bağlantıları ve şifre sıfırlama mailleri artık gerçekten gidiyor)
+     - Gizlilik politikası ve kullanım koşulları sayfası (/gizlilik)
+
+	V1.3  (06.10.2026)
+     - Hikayeler: 24 saatlik yazılı (renkli arka plan) ve fotoğraflı hikayeler, görenler listesi
+     - Hikayelere emoji tepkisi ve yanıt (hikaye sahibine mesaj olarak gider)
+     - @bahsetme: bahsedilen kişiye bildirim, tıklanabilir isimler, yazarken kişi önerisi
+     - Mesajlarda fotoğraf gönderme ve "yazıyor…" göstergesi
+     - Yeniden paylaşma (kendi yorumunla alıntılama)
+     - Anket: 2-4 seçenek, 1 saat ile 1 hafta arası süre
+     - Keşfet sayfası: popüler paylaşımlar ve gündemdeki #etiketler
+     - Hikaye arşivi ve profilde "öne çıkanlar"
+     - Telefona/bilgisayara anlık bildirim, uygulama simgesi, ana ekrana ekleme desteği
+
+	V1.4  (06.10.2026)
+     - Android uygulaması (APK) yayınlandı; indirme sayfası: /indir
+     - Uygulama içinde "Yeni sürüm var" güncelleme uyarısı
+     - Geri tuşunun giriş sayfasına dönmesi düzeltildi
+     - Uygulamada hesabın hatırlanmaması düzeltildi (90 gün oturum açık kalır)
+     - Mobil tasarım yenilendi:
+         · Alt menü: Akış, Keşfet, +, Mesajlar, Menü
+         · "+" düğmesiyle gönderi veya hikaye paylaşma
+         · Ana sayfa yalnızca takip ettiklerinin gönderileri + yatay önerilen kişiler
+         · Keşfet'te arama kutusu, gündem etiketleri, "Tümü / Popüler" sekmeleri
+         · "Akış" başlığı ve üstteki arama mobilde kaldırıldı, sağ üstte bildirim zili
+     - Hikayede sol altta izleyen sayısı; yukarı kaydırınca görenler listesi
+     - Yorumlarda şikâyet/silme ⋯ menüsüne taşındı
+     - Gönderi sahibi kendi gönderisindeki yorumları silebiliyor
+     - Biyografideki @isimler ve #etiketler tıklanabilir
+     - Mobil mesajlaşmada yazma kutusunun alt menü arkasında kalması düzeltildi
+     - Yönetici gizli bir profile bakınca "yönetici olarak görüyorsun" uyarısı
+     - Baştan sona otomatik test (104 adım) ve mobil sayfa kontrolü yapıldı
+
+	V1.5  (06.10.2026)
+     - Mobilde menü alt çubuğa taşındı ve sağdan açılıyor; tekrar eden bağlantılar kaldırıldı
+     - Tarayıcının gri onay pencereleri yerine sitenin kendi "Emin misin?" pencereleri
+     - Paylaşım kutusundaki Fotoğraf / Anket düğmeleri hizalandı
+     - Ana sayfada "Bildirimleri aç" çağrısı; bildirim aboneliği her açılışta eşitleniyor
+     - Uygulama simgesinde okunmamış bildirim sayısı
+     - Denetimci rolü: şikâyetleri görür ve sonuçlandırır, gönderi/yorum kaldırabilir
+       (yönetim panelinden "Denetimci yap" ile atanır)
