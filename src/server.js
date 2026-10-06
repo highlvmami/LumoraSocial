@@ -96,8 +96,16 @@ app.use('/auth', oauthRoutes);
 const pub = path.join(config.rootDir, 'public');
 const page = (file) => (_req, res) => res.sendFile(path.join(pub, file));
 
-app.get('/', (req, res) => (req.user ? res.redirect('/akis') : page('index.html')(req, res)));
-app.get('/akis', (req, res) => (req.user ? page('app.html')(req, res) : res.redirect('/')));
+// Sorgu (?app=android&v=…) yönlendirmede korunur; giriş sayfası önbellekten (geri tuşu) gösterilmez
+const query = (req) => (req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '');
+app.get('/', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  req.user ? res.redirect('/akis' + query(req)) : page('index.html')(req, res);
+});
+app.get('/akis', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  req.user ? page('app.html')(req, res) : res.redirect('/' + query(req));
+});
 app.get('/admin-giris', page('admin-login.html'));
 app.get('/sifremi-unuttum', page('forgot.html'));
 app.get('/sifre-sifirla', page('forgot.html'));

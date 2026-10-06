@@ -1,5 +1,8 @@
 import { api, bindPasswordConfirm, h, handleForm, showAlert } from './common.js';
 
+// Geri tuşuyla önbellekten açılırsa sunucuya yeniden sor (oturum açıksa doğrudan akışa gider)
+window.addEventListener('pageshow', (e) => e.persisted && location.reload());
+
 const forms = { login: document.getElementById('login-form'), register: document.getElementById('register-form') };
 
 function showTab(tab) {
@@ -36,12 +39,12 @@ bindPasswordConfirm(reg.password, reg.passwordConfirm);
 
 handleForm(forms.login, document.getElementById('login-alert'), async (data) => {
   await api('/auth/login', { method: 'POST', body: data });
-  location.href = '/akis';
+  location.replace('/akis' + location.search);
 });
 
 handleForm(reg, document.getElementById('register-alert'), async (data) => {
   await api('/auth/register', { method: 'POST', body: data });
-  location.href = '/akis';
+  location.replace('/akis' + location.search);
 });
 
 /* Sosyal giriş butonları (yalnızca .env'de ayarlı olanlar) */

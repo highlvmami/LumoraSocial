@@ -374,7 +374,7 @@ async function securityTab(ctx) {
             type: 'button',
             onclick: async () => {
               const res = await api(`/account/sessions/${s.id}`, { method: 'DELETE' });
-              if (res.current) location.href = '/';
+              if (res.current) location.replace('/');
               else renderSessions();
             },
           }, 'Çıkış yap')
@@ -398,7 +398,7 @@ async function securityTab(ctx) {
     const msg = includeCurrent ? 'Bu cihaz dahil tüm cihazlardan çıkış yapılsın mı?' : 'Bu cihaz dışındaki tüm oturumlar kapatılsın mı?';
     if (!confirm(msg)) return;
     await api('/account/sessions/logout-all', { method: 'POST', body: { includeCurrent } });
-    if (includeCurrent) location.href = '/';
+    if (includeCurrent) location.replace('/');
     else {
       toast('Diğer tüm oturumlar kapatıldı.');
       renderSessions();

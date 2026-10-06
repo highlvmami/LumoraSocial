@@ -319,7 +319,7 @@ export function confirmDialog(message) {
 
 export async function logout() {
   await api('/auth/logout', { method: 'POST', body: {} });
-  location.href = '/';
+  location.replace('/');
 }
 
 /**

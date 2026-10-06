@@ -830,7 +830,7 @@ function route() {
 
 const me = await api('/auth/me');
 if (!me.user) {
-  location.href = '/';
+  location.replace('/' + location.search);
   throw new Error('Oturum yok');
 }
 state.me = me.user;
