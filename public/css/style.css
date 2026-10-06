@@ -855,3 +855,22 @@ label.btn { margin: 0; font-size: 13px; }
 .role-badge .mag::before { content: ""; position: absolute; left: 3px; top: 3px; width: 6px; height: 6px; border: 1.6px solid #2563eb; border-radius: 50%; }
 .role-badge .mag::after { content: ""; position: absolute; left: 9px; top: 9px; width: 1.6px; height: 4px; background: #2563eb; transform: rotate(-45deg); transform-origin: top; border-radius: 1px; }
 @media (prefers-reduced-motion: reduce) { .role-badge.admin { animation: none; } }
+/* Yönetici rozeti: üst kenarda küçük titreyen alevler + sol üstte taç */
+.role-badge.admin::before {
+  content: ""; position: absolute; left: 9px; right: 9px; top: -9px; height: 11px; pointer-events: none;
+  background: radial-gradient(ellipse 32% 100% at 50% 100%, #fff59d 0 18%, #ffb300 34%, #ff6d00 52%, rgba(255, 61, 0, .9) 64%, transparent 72%) 0 0 / 8px 11px repeat-x;
+  -webkit-mask: linear-gradient(to top, #000 55%, transparent); mask: linear-gradient(to top, #000 55%, transparent);
+  transform-origin: bottom; animation: flicker .45s ease-in-out infinite alternate;
+}
+.role-badge.admin::after {
+  content: ""; position: absolute; left: 13px; right: 13px; top: -6px; height: 8px; pointer-events: none;
+  background: radial-gradient(ellipse 28% 100% at 50% 100%, #fffde7 0 20%, #ffd54f 45%, transparent 70%) 4px 0 / 8px 8px repeat-x;
+  transform-origin: bottom; animation: flicker .33s ease-in-out infinite alternate-reverse;
+}
+@keyframes flicker { from { transform: scaleY(.65); opacity: .85; } to { transform: scaleY(1.15); opacity: 1; } }
+.role-badge .crown {
+  position: absolute; top: -9px; left: -5px; width: 15px; height: 11px; transform: rotate(-18deg);
+  background: linear-gradient(180deg, #fff176, #ffb300 70%, #f57f17); filter: drop-shadow(0 0 1.5px rgba(255, 145, 0, .8));
+  clip-path: polygon(0 100%, 0 30%, 25% 62%, 50% 0, 75% 62%, 100% 30%, 100% 100%);
+}
+@media (prefers-reduced-motion: reduce) { .role-badge.admin::before, .role-badge.admin::after { animation: none; } }
