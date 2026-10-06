@@ -40,7 +40,7 @@ function sendPush(userId, type, actorId, d) {
   };
   const [title, body, url] = texts[type] || ['LumoraSocial', 'Yeni bir bildirimin var', '/akis#/bildirimler'];
   // Başlıkta uygulama adı; metinde kim ne yaptı (bildirim genişletilince tamamı görünür)
-  pushToUser(userId, { title: 'LumoraSocial', body: body ? `${title}: ${body}` : title, url, tag: `${type}-${d.postId || actorId || ''}` });
+  pushToUser(userId, { title: 'LS', body: body ? `${title}: ${body}` : title, url, tag: `${type}-${d.postId || actorId || ''}` });
 }
 
 export function listNotifications(userId, { before = null, limit = 30 } = {}) {
