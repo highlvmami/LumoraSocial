@@ -1,5 +1,6 @@
 import { api, avatar, dropdown, formatDate, h, handleForm, logout, nameWithBadge, usernameWithBadge, attachMentionAutocomplete, openReportDialog, openLightbox, resizeImage, SOCIALS, socialHref, timeAgo, toast } from './common.js';
 import { highlightsRow, storyBar } from './stories.js';
+import { registerServiceWorker } from './push.js';
 import { showSettings } from './settings.js';
 import { showNotifications } from './notifications.js';
 import { showMessages } from './messages.js';
@@ -866,6 +867,7 @@ window.addEventListener('hashchange', () => {
   setDrawer(false);
   window.scrollTo(0, 0);
 });
+registerServiceWorker();
 window.addEventListener('hashchange', route);
 setInterval(refreshUnread, 30 * 1000);
 route();

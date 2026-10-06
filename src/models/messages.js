@@ -1,5 +1,6 @@
 import { db } from '../db.js';
 import { removeUpload } from '../uploads.js';
+import { pushToUser } from '../services/push.js';
 
 /* Birebir mesajlaşma. İki kullanıcı arasında tek bir sohbet (conversation) vardır. */
 
@@ -31,6 +32,8 @@ export function sendMessage(senderId, recipientId, content, imageUrl = null) {
     db.prepare('INSERT INTO messages (conversation_id, sender_id, content, image_url) VALUES (?, ?, ?, ?)').run(conv.id, senderId, content, imageUrl).lastInsertRowid
   );
   db.prepare("UPDATE conversations SET last_message_id = ?, updated_at = datetime('now') WHERE id = ?").run(id, conv.id);
+  const sender = db.prepare('SELECT username FROM users WHERE id = ?').get(senderId)?.username;
+  pushToUser(recipientId, { title: sender, body: content || 'Fotoğraf gönderdi', url: `/akis#/mesajlar/${sender}`, tag: `msg-${senderId}` });
   return getMessage(id);
 }
 

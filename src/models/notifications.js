@@ -1,4 +1,5 @@
 import { db } from '../db.js';
+import { pushToUser } from '../services/push.js';
 
 /**
  * Bildirim türleri (istemci bunlara göre metin üretir):
@@ -19,6 +20,26 @@ export function notify(userId, type, { actorId = null, data = {} } = {}) {
     actorId,
     JSON.stringify(data)
   );
+  sendPush(userId, type, actorId, data);
+}
+
+/** Bildirimin telefona giden kısa metni ve tıklanınca açılacak sayfa. */
+function sendPush(userId, type, actorId, d) {
+  const actor = actorId ? db.prepare('SELECT username FROM users WHERE id = ?').get(actorId)?.username : null;
+  const post = d.postId ? `/akis#/p/${d.postId}` : '/akis#/bildirimler';
+  const texts = {
+    post_reaction: [`${actor} paylaşımına ${d.emoji} tepkisi verdi`, d.preview, post],
+    post_comment: [`${actor} yorum yaptı`, d.text, post],
+    post_repost: [`${actor} paylaşımını yeniden paylaştı`, d.text || d.preview, post],
+    mention: [`${actor} senden bahsetti`, d.text, post],
+    new_follower: [`${actor} seni takip etmeye başladı`, '', `/akis#/u/${actor}`],
+    follow_request: [`${actor} seni takip etmek istiyor`, '', '/akis#/bildirimler'],
+    follow_accepted: [`${actor} takip isteğini kabul etti`, '', `/akis#/u/${actor}`],
+    new_device: ['Yeni cihazdan giriş', `${d.device} (IP ${d.ip})`, '/akis#/ayarlar/guvenlik'],
+    suspicious_login: ['Şüpheli giriş', `${d.device} (IP ${d.ip})`, '/akis#/ayarlar/guvenlik'],
+  };
+  const [title, body, url] = texts[type] || ['LumoraSocial', 'Yeni bir bildirimin var', '/akis#/bildirimler'];
+  pushToUser(userId, { title, body: body || '', url, tag: `${type}-${d.postId || actorId || ''}` });
 }
 
 export function listNotifications(userId, { before = null, limit = 30 } = {}) {

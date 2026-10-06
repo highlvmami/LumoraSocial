@@ -17,7 +17,8 @@
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "libsql": "^0.5.29",
-    "nodemailer": "^10.0.13"
+    "nodemailer": "^10.0.13",
+    "web-push": "^3.6.7"
   },
   "engines": {
     "node": ">=20"

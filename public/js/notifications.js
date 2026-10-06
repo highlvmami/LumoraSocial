@@ -1,4 +1,5 @@
 import { api, avatar, h, nameWithBadge, timeAgo, toast } from './common.js';
+import { pushCard } from './push.js';
 
 const ipLabel = (ip) => (['::1', '127.0.0.1'].includes(ip) ? 'bu bilgisayar' : ip);
 const userLink = (u) => h('a', { href: `#/u/${encodeURIComponent(u.username)}` }, nameWithBadge(u));
@@ -52,7 +53,7 @@ export async function showNotifications(ctx) {
   const { main } = ctx;
   const render = async () => {
     const [{ requests }, { notifications }] = await Promise.all([api('/account/follow-requests'), api('/notifications')]);
-    const sections = [h('div', { class: 'feed-header' }, h('h2', {}, 'Bildirimler'))];
+    const sections = [h('div', { class: 'feed-header' }, h('h2', {}, 'Bildirimler')), pushCard()];
 
     if (requests.length) {
       sections.push(h('section', { class: 'card panel' }, h('h3', {}, `Takip istekleri (${requests.length})`), ...requests.map((r) => requestRow(r, ctx, render))));

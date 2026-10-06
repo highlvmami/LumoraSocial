@@ -23,6 +23,7 @@ import { enabledProviders } from './services/oauthProviders.js';
 import userRoutes from './routes/users.js';
 import postRoutes from './routes/posts.js';
 import storyRoutes from './routes/stories.js';
+import pushRoutes from './routes/push.js';
 import { cleanupExpiredStories } from './models/stories.js';
 import adminRoutes from './routes/admin.js';
 
@@ -77,6 +78,7 @@ app.use('/api/search', searchRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/stories', storyRoutes);
+app.use('/api/push', pushRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Bulunamadı.' }));
 
