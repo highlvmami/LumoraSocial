@@ -868,7 +868,37 @@ window.addEventListener('hashchange', () => {
   window.scrollTo(0, 0);
 });
 registerServiceWorker();
+checkAndroidUpdate();
 window.addEventListener('hashchange', route);
 setInterval(refreshUnread, 30 * 1000);
 route();
 
+
+/* ---------------- Android uygulaması güncelleme uyarısı ---------------- */
+
+/** Uygulama siteyi "?app=android&v=<sürüm>" ile açar; daha yeni sürüm yayınlandıysa üstte uyarı gösterilir. */
+async function checkAndroidUpdate() {
+  let version = 0;
+  try {
+    const p = new URLSearchParams(location.search);
+    if (p.get('app') === 'android') sessionStorage.setItem('androidApp', p.get('v') || '0');
+    version = Number(sessionStorage.getItem('androidApp') || 0);
+  } catch {
+    return;
+  }
+  if (!version) return;
+  try {
+    const latest = await api('/app/android');
+    if (!latest.apkUrl || latest.versionCode <= version) return;
+    const bar = h(
+      'div',
+      { class: 'card banner app-update' },
+      h('span', {}, h('b', {}, `Yeni sürüm var (${latest.versionName})`), latest.notes ? ` · ${latest.notes}` : ''),
+      h('a', { class: 'btn sm', href: latest.apkUrl }, 'Güncelle')
+    );
+    bar.classList.add('app-update-top');
+    document.querySelector('.layout').before(bar);
+  } catch {
+    /* sessizce geç */
+  }
+}

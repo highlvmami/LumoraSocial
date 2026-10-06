@@ -724,3 +724,8 @@ body.story-open { overflow: hidden; }
 /* ================= Anlık bildirim kartı ================= */
 .push-card p { margin: 4px 0 0; }
 .push-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.download-box { text-align: left; }
+.download-icon { display: block; border-radius: 22px; margin: 8px 0 12px; }
+.download-box ol { padding-left: 20px; line-height: 1.7; }
+.app-update { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.app-update-top { max-width: 924px; margin: 16px auto 0; width: calc(100% - 32px); }

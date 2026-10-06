@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import express from 'express';
 import session from 'express-session';
@@ -97,6 +98,18 @@ app.get('/sifre-sifirla', page('forgot.html'));
 app.get('/eposta-dogrula', emailVerifyPage);
 app.get('/dogrulama-sonucu', page('verified.html'));
 app.get(['/gizlilik', '/kosullar'], page('gizlilik.html'));
+app.get('/indir', page('indir.html'));
+
+// Android uygulaması: sürüm bilgisi (uygulama içi güncelleme uyarısı) ve alan adı doğrulaması (adres çubuğunu gizler)
+const androidRelease = () => JSON.parse(fs.readFileSync(path.join(config.rootDir, 'android-release.json'), 'utf8'));
+app.get('/api/app/android', (_req, res) => {
+  const { versionCode, versionName, apkUrl, notes } = androidRelease();
+  res.set('Cache-Control', 'no-cache').json({ versionCode, versionName, apkUrl, notes });
+});
+app.get('/.well-known/assetlinks.json', (_req, res) => {
+  const { packageId, certSha256 } = androidRelease();
+  res.json([{ relation: ['delegate_permission/common.handle_all_urls'], target: { namespace: 'android_app', package_name: packageId, sha256_cert_fingerprints: certSha256 } }]);
+});
 app.get('/yonetim', (req, res) => {
   if (req.user?.role === 'admin') return page('admin.html')(req, res);
   res.redirect(req.user ? '/akis' : '/admin-giris');

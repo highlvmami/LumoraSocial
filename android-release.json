@@ -1,0 +1,10 @@
+{
+  "packageId": "com.lumorasocial.app",
+  "versionCode": 1,
+  "versionName": "1.0.0",
+  "apkUrl": "https://github.com/highlvmami/LumoraSocial/releases/download/v1.0.0/LumoraSocial.apk",
+  "certSha256": [
+    "89:20:90:88:2E:FF:07:EE:5D:AA:47:6D:95:EB:B0:1D:41:2C:16:B1:7A:92:30:65:08:EA:30:E1:9D:96:A1:61"
+  ],
+  "notes": "İlk sürüm"
+}
