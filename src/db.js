@@ -392,6 +392,23 @@ const migrations = [
     PRIMARY KEY (post_id, user_id)
   );
   `,
+
+  // 14: hikaye arşivi ve öne çıkanlar
+  `
+  CREATE TABLE highlights (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title      TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX idx_highlights_user ON highlights(user_id, id);
+  CREATE TABLE highlight_items (
+    highlight_id INTEGER NOT NULL REFERENCES highlights(id) ON DELETE CASCADE,
+    story_id     INTEGER NOT NULL REFERENCES stories(id) ON DELETE CASCADE,
+    added_at     TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (highlight_id, story_id)
+  );
+  `,
 ];
 
 function schemaVersion() {

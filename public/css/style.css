@@ -709,3 +709,14 @@ body.story-open { overflow: hidden; }
 .tag-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-weight: 600; font-size: 14px; }
 .tag-chip:hover { text-decoration: none; filter: brightness(.97); }
 .tag-chip span { font-size: 12px; opacity: .7; font-weight: 500; }
+
+/* ================= Öne çıkanlar ve arşiv ================= */
+.hl-cover { width: 100%; height: 100%; border-radius: 50%; background-size: cover; background-position: center; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 20px; }
+.hl-cover.archive { background: var(--surface-2); border: 2px dashed var(--border); }
+.hl-cover.archive::after { content: ""; width: 18px; height: 18px; border: 2px solid var(--muted); border-radius: 50%; }
+.archive-modal { max-width: 560px; }
+.archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; max-height: 60vh; overflow: auto; }
+.archive-item { position: relative; aspect-ratio: 9 / 16; border: 0; border-radius: 10px; background-size: cover; background-position: center; color: #fff; font: inherit; font-size: 12px; font-weight: 600; padding: 8px; cursor: pointer; overflow: hidden; display: flex; align-items: center; justify-content: center; text-align: center; }
+.archive-item span { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.archive-item time { position: absolute; left: 6px; top: 6px; background: rgba(0, 0, 0, .55); border-radius: 6px; padding: 1px 6px; font-size: 11px; }
+.hl-pick-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }

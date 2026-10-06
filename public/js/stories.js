@@ -43,9 +43,13 @@ export function storyBar(me) {
 
 /* ---------------- Görüntüleyici ---------------- */
 
-function openViewer(tray, groupIndex, me, onClose) {
+/**
+ * mode: 'live' (akıştaki hikayeler), 'highlight' (profildeki öne çıkan), 'archive' (kendi arşivin)
+ * opts.highlight: öne çıkan kaydı, opts.start: başlangıç hikayesinin sırası
+ */
+export function openViewer(tray, groupIndex, me, onClose, { mode = 'live', highlight = null, start = null } = {}) {
   let gi = groupIndex;
-  let si = Math.max(0, tray[gi].stories.findIndex((s) => !s.viewed));
+  let si = start ?? (mode === 'live' ? Math.max(0, tray[gi].stories.findIndex((s) => !s.viewed)) : 0);
   let timer;
   let started;
   let remaining = STORY_MS;
@@ -128,7 +132,45 @@ function openViewer(tray, groupIndex, me, onClose) {
     );
 
     foot.replaceChildren();
-    if (mine) {
+    const highlightBtn = () =>
+      h('button', { type: 'button', class: 'story-action', onclick: () => (setPaused(true), openHighlightPicker(me, story, () => setPaused(false))) }, 'Öne çıkar');
+    const removeAndContinue = (msg) => {
+      group.stories.splice(si, 1);
+      toast(msg);
+      if (!group.stories.length) return close();
+      si = Math.min(si, group.stories.length - 1);
+      show();
+    };
+    if (mode === 'highlight') {
+      if (mine) {
+        foot.append(
+          h('button', {
+            type: 'button',
+            class: 'story-action danger',
+            onclick: async () => {
+              setPaused(true);
+              if (!confirm(`Bu hikaye "${highlight.title}" öne çıkanından çıkarılsın mı?`)) return setPaused(false);
+              await api(`/stories/highlights/${highlight.id}/items/${story.id}`, { method: 'DELETE' });
+              removeAndContinue('Öne çıkandan çıkarıldı.');
+            },
+          }, 'Öne çıkandan çıkar')
+        );
+      }
+    } else if (mode === 'archive') {
+      foot.append(
+        highlightBtn(),
+        h('button', {
+          type: 'button',
+          class: 'story-action danger',
+          onclick: async () => {
+            setPaused(true);
+            if (!confirm('Bu hikaye kalıcı olarak silinsin mi? Öne çıkanlardan da kaldırılır.')) return setPaused(false);
+            await api(`/stories/${story.id}`, { method: 'DELETE' });
+            removeAndContinue('Hikaye silindi.');
+          },
+        }, 'Sil')
+      );
+    } else if (mine) {
       const viewersBtn = h('button', { type: 'button', class: 'story-action' }, 'Görenler');
       viewersBtn.addEventListener('click', async () => {
         setPaused(true);
@@ -151,6 +193,7 @@ function openViewer(tray, groupIndex, me, onClose) {
             show();
           },
         }, 'Sil'),
+        highlightBtn(),
         h('button', { type: 'button', class: 'story-action', onclick: () => (close(), openComposer(onClose)) }, 'Yeni hikaye')
       );
     } else {
@@ -316,4 +359,145 @@ export function openComposer(onDone) {
   paint();
   document.body.append(backdrop);
   text.focus();
+}
+
+/* ---------------- Arşiv ve öne çıkanlar ---------------- */
+
+/** Profildeki öne çıkanlar satırı. Kendi profilinde arşive giden bir daire de vardır. */
+export function highlightsRow(user, me) {
+  const row = h('section', { class: 'card story-bar highlights-row hidden', 'aria-label': 'Öne çıkanlar' });
+  const isMe = user.id === me.id;
+  const cover = (s) =>
+    s?.imageUrl
+      ? h('span', { class: 'hl-cover', style: { backgroundImage: `url("${s.imageUrl}")` } })
+      : h('span', { class: 'hl-cover', style: { background: s?.bg || 'var(--primary)' } }, s?.text?.slice(0, 1) || '');
+  const load = async () => {
+    let highlights = [];
+    try {
+      ({ highlights } = await api(`/stories/highlights/${encodeURIComponent(user.username)}`));
+    } catch {
+      /* gizli hesap vb. */
+    }
+    const items = highlights.map((hl, i) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          class: 'story-bubble',
+          title: hl.title,
+          onclick: () => openViewer(highlights.map((x) => ({ user, stories: [...x.stories] })), i, me, load, { mode: 'highlight', highlight: hl }),
+        },
+        h('span', { class: 'story-ring' }, cover(hl.stories[0])),
+        h('span', { class: 'story-name' }, hl.title)
+      )
+    );
+    if (isMe) {
+      items.push(
+        h(
+          'button',
+          { type: 'button', class: 'story-bubble', title: 'Hikaye arşivin', onclick: () => openArchive(me, load) },
+          h('span', { class: 'story-ring' }, h('span', { class: 'hl-cover archive' })),
+          h('span', { class: 'story-name' }, 'Arşiv')
+        )
+      );
+    }
+    row.replaceChildren(...items);
+    row.classList.toggle('hidden', !items.length);
+  };
+  load();
+  return row;
+}
+
+const shortDate = (s) => new Date(s.replace(' ', 'T') + 'Z').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+
+/** Kendi hikaye arşivin: tüm eski hikayeler küçük kareler halinde */
+async function openArchive(me, onChange) {
+  const grid = h('div', { class: 'archive-grid' }, h('p', { class: 'muted' }, 'Yükleniyor…'));
+  const box = h(
+    'div',
+    { class: 'card modal archive-modal' },
+    h('h2', {}, 'Hikaye arşivin'),
+    h('p', { class: 'muted small' }, 'Süresi dolan hikayelerin burada yalnızca sana görünür. Birine dokunup öne çıkarabilir veya silebilirsin.'),
+    grid,
+    h('div', { class: 'modal-actions' }, h('button', { type: 'button', class: 'btn', 'data-close': true }, 'Kapat'))
+  );
+  const backdrop = h('div', { class: 'modal-backdrop' }, box);
+  const close = () => backdrop.remove();
+  backdrop.addEventListener('click', (e) => (e.target === backdrop || e.target.dataset.close !== undefined) && close());
+  document.body.append(backdrop);
+
+  const { stories } = await api('/stories/archive');
+  if (!stories.length) return grid.replaceChildren(h('p', { class: 'muted' }, 'Henüz hikayen yok.'));
+  // Görüntüleyicide eskiden yeniye gezilsin
+  const ordered = [...stories].reverse();
+  grid.replaceChildren(
+    ...stories.map((s) =>
+      h(
+        'button',
+        {
+          type: 'button',
+          class: 'archive-item',
+          style: s.imageUrl ? { backgroundImage: `url("${s.imageUrl}")` } : { background: s.bg || 'var(--primary)' },
+          onclick: () => {
+            close();
+            openViewer([{ user: me, stories: ordered }], 0, me, onChange, { mode: 'archive', start: ordered.indexOf(s) });
+          },
+        },
+        s.imageUrl ? null : h('span', {}, s.text),
+        h('time', {}, shortDate(s.createdAt))
+      )
+    )
+  );
+}
+
+/** Hikayeyi bir öne çıkana ekleme penceresi (mevcut birine ya da yeni oluşturulana) */
+async function openHighlightPicker(me, story, onDone) {
+  const { highlights } = await api(`/stories/highlights/${encodeURIComponent(me.username)}`);
+  const title = h('input', { type: 'text', maxlength: 30, placeholder: 'Yeni öne çıkan adı (örn. Tatil)' });
+  const alertEl = h('div', { class: 'alert hidden' });
+  const finish = (msg) => {
+    backdrop.remove();
+    if (msg) toast(msg);
+    onDone?.();
+  };
+  const fail = (err) => {
+    alertEl.textContent = err.message;
+    alertEl.classList.remove('hidden');
+  };
+  const form = h(
+    'form',
+    { class: 'card modal' },
+    h('h2', {}, 'Öne çıkar'),
+    highlights.length ? h('p', { class: 'muted small' }, 'Mevcut bir öne çıkana ekle:') : null,
+    highlights.length
+      ? h(
+          'div',
+          { class: 'hl-pick-list' },
+          ...highlights.map((hl) =>
+            h(
+              'button',
+              {
+                type: 'button',
+                class: 'btn ghost sm',
+                disabled: hl.stories.some((x) => x.id === story.id),
+                onclick: () =>
+                  api(`/stories/highlights/${hl.id}/items`, { method: 'POST', body: { storyId: story.id } }).then(() => finish(`"${hl.title}" öne çıkanına eklendi.`), fail),
+              },
+              hl.title
+            )
+          )
+        )
+      : null,
+    h('label', {}, 'Yeni öne çıkan', title),
+    alertEl,
+    h('div', { class: 'modal-actions' }, h('button', { type: 'button', class: 'btn ghost', 'data-close': true }, 'Vazgeç'), h('button', { type: 'submit', class: 'btn' }, 'Oluştur ve ekle'))
+  );
+  const backdrop = h('div', { class: 'modal-backdrop story-modal' }, form);
+  backdrop.addEventListener('click', (e) => (e.target === backdrop || e.target.dataset.close !== undefined) && finish());
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    api('/stories/highlights', { method: 'POST', body: { title: title.value, storyId: story.id } }).then(() => finish('Öne çıkan oluşturuldu.'), fail);
+  });
+  document.body.append(backdrop);
+  title.focus();
 }

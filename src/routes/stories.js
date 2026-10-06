@@ -2,7 +2,8 @@ import express, { Router } from 'express';
 import { MAX_IMAGE_BYTES, saveImage } from '../uploads.js';
 import { requireAuth } from '../middleware/auth.js';
 import * as v from '../validation.js';
-import { followStatus } from '../models/follows.js';
+import { canViewPostsOf, followStatus } from '../models/follows.js';
+import { findByUsername } from '../models/users.js';
 import { isBlockedEitherWay } from '../models/safety.js';
 import { REACTIONS } from '../models/posts.js';
 import { sendMessage } from '../models/messages.js';
@@ -17,6 +18,16 @@ import {
   listViewers,
   markViewed,
   setReaction,
+  getArchive,
+  findOwnStory,
+  listHighlights,
+  findHighlight,
+  createHighlight,
+  countHighlights,
+  addToHighlight,
+  removeFromHighlight,
+  deleteHighlight,
+  MAX_HIGHLIGHTS,
 } from '../models/stories.js';
 
 const router = Router();
@@ -34,6 +45,59 @@ const checkLimit = (userId) => {
 
 router.get('/', (req, res) => {
   res.json({ tray: getStoryTray(req.user.id), backgrounds: STORY_BACKGROUNDS, reactions: REACTIONS });
+});
+
+/* ---- Arşiv ve öne çıkanlar ---- */
+
+router.get('/archive', (req, res) => {
+  const before = req.query.before ? v.id(req.query.before) : null;
+  res.json(getArchive(req.user.id, { before }));
+});
+
+router.get('/highlights/:username', (req, res) => {
+  const owner = findByUsername(req.params.username);
+  if (!owner || owner.status !== 'active') throw new v.HttpError(404, 'Kullanıcı bulunamadı.');
+  const visible = canViewPostsOf(req.user, owner) && (req.user.role === 'admin' || !isBlockedEitherWay(req.user.id, owner.id));
+  res.json({ highlights: visible ? listHighlights(owner.id) : [] });
+});
+
+const ownHighlight = (req) => {
+  const hl = findHighlight(v.id(req.params.id));
+  if (!hl || hl.user_id !== req.user.id) throw new v.HttpError(404, 'Öne çıkan bulunamadı.');
+  return hl;
+};
+const ownStoryFromBody = (req) => {
+  const story = findOwnStory(v.id(req.body.storyId), req.user.id);
+  if (!story) throw new v.HttpError(404, 'Hikaye bulunamadı.');
+  return story;
+};
+
+/** Yeni öne çıkan (ilk hikayesiyle birlikte). */
+router.post('/highlights', (req, res) => {
+  const story = ownStoryFromBody(req);
+  const title = v.str(req.body.title, { field: 'Başlık', min: 1, max: 30 });
+  if (countHighlights(req.user.id) >= MAX_HIGHLIGHTS) throw v.bad(`En fazla ${MAX_HIGHLIGHTS} öne çıkan oluşturabilirsin.`);
+  const id = createHighlight(req.user.id, title);
+  addToHighlight(id, story.id);
+  res.status(201).json({ id });
+});
+
+router.post('/highlights/:id/items', (req, res) => {
+  const hl = ownHighlight(req);
+  const story = ownStoryFromBody(req);
+  if (!addToHighlight(hl.id, story.id)) throw v.bad('Bu öne çıkan dolu.');
+  res.json({ ok: true });
+});
+
+router.delete('/highlights/:id/items/:storyId', (req, res) => {
+  const hl = ownHighlight(req);
+  removeFromHighlight(hl.id, v.id(req.params.storyId));
+  res.json({ ok: true });
+});
+
+router.delete('/highlights/:id', (req, res) => {
+  deleteHighlight(ownHighlight(req).id);
+  res.json({ ok: true });
 });
 
 /** Yazılı hikaye */
@@ -97,7 +161,9 @@ router.get('/:id/viewers', (req, res) => {
 });
 
 router.delete('/:id', (req, res) => {
-  const story = findStory(v.id(req.params.id));
+  const id = v.id(req.params.id);
+  // Sahibi arşivdeki (süresi dolmuş) hikayesini de silebilir
+  const story = findOwnStory(id, req.user.id) || findStory(id);
   if (!story || (story.user_id !== req.user.id && req.user.role !== 'admin')) throw new v.HttpError(404, 'Hikaye bulunamadı.');
   deleteStory(story.id);
   res.json({ ok: true });

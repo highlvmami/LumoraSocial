@@ -1,5 +1,5 @@
 import { api, avatar, dropdown, formatDate, h, handleForm, logout, nameWithBadge, usernameWithBadge, attachMentionAutocomplete, openReportDialog, openLightbox, resizeImage, SOCIALS, socialHref, timeAgo, toast } from './common.js';
-import { storyBar } from './stories.js';
+import { highlightsRow, storyBar } from './stories.js';
 import { showSettings } from './settings.js';
 import { showNotifications } from './notifications.js';
 import { showMessages } from './messages.js';
@@ -713,6 +713,7 @@ function showUser(username) {
       if (!header) {
         header = profileHeader(data.user);
         list.before(header);
+        if (!data.locked) list.before(highlightsRow(data.user, state.me));
         if (data.locked) {
           list.before(
             h(

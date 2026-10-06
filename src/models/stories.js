@@ -23,17 +23,81 @@ export function findStory(id) {
   return db.prepare('SELECT * FROM stories WHERE id = ? AND expires_at > ?').get(id, Date.now()) ?? null;
 }
 
+/** Hikayeyi tamamen siler (arşivden ve öne çıkanlardan da). */
 export function deleteStory(id) {
   const row = db.prepare('SELECT image_url FROM stories WHERE id = ?').get(id);
   db.prepare('DELETE FROM stories WHERE id = ?').run(id);
   removeUpload(row?.image_url);
 }
 
-/** Süresi dolan hikayeleri ve fotoğraflarını siler. */
+/*
+ * Süresi dolan hikayeler arşivde (yalnızca sahibine görünür) kalır.
+ * 1 yıldan eski ve öne çıkanlarda olmayan arşiv hikayeleri fotoğraflarıyla silinir.
+ */
+const ARCHIVE_TTL_MS = 365 * 24 * 60 * 60 * 1000;
 export function cleanupExpiredStories() {
-  const now = Date.now();
-  for (const r of db.prepare('SELECT image_url FROM stories WHERE expires_at <= ? AND image_url IS NOT NULL').all(now)) removeUpload(r.image_url);
-  db.prepare('DELETE FROM stories WHERE expires_at <= ?').run(now);
+  const cutoff = Date.now() - ARCHIVE_TTL_MS;
+  const where = 'expires_at <= ? AND id NOT IN (SELECT story_id FROM highlight_items)';
+  for (const r of db.prepare(`SELECT image_url FROM stories WHERE ${where} AND image_url IS NOT NULL`).all(cutoff)) removeUpload(r.image_url);
+  db.prepare(`DELETE FROM stories WHERE ${where}`).run(cutoff);
+}
+
+const toStory = (r) => ({ id: r.id, imageUrl: r.image_url, text: r.text, bg: r.bg, createdAt: r.created_at, expired: r.expires_at <= Date.now() });
+
+/** Kendi hikaye arşivin (süresi dolmuşlar dahil), yeniden eskiye. */
+export function getArchive(userId, { before = null, limit = 60 } = {}) {
+  const rows = db
+    .prepare('SELECT * FROM stories WHERE user_id = ? AND (? IS NULL OR id < ?) ORDER BY id DESC LIMIT ?')
+    .all(userId, before, before, limit + 1);
+  return { stories: rows.slice(0, limit).map(toStory), hasMore: rows.length > limit };
+}
+
+export function findOwnStory(id, userId) {
+  return db.prepare('SELECT * FROM stories WHERE id = ? AND user_id = ?').get(id, userId) ?? null;
+}
+
+/* ---- Öne çıkanlar ---- */
+
+export const MAX_HIGHLIGHTS = 20;
+export const MAX_HIGHLIGHT_ITEMS = 50;
+
+export function listHighlights(userId) {
+  const highlights = db.prepare('SELECT id, title FROM highlights WHERE user_id = ? ORDER BY id').all(userId);
+  const items = db.prepare(
+    `SELECT s.* FROM highlight_items i JOIN stories s ON s.id = i.story_id WHERE i.highlight_id = ? ORDER BY s.id`
+  );
+  return highlights
+    .map((hl) => ({ id: hl.id, title: hl.title, stories: items.all(hl.id).map(toStory) }))
+    .filter((hl) => hl.stories.length);
+}
+
+export function findHighlight(id) {
+  return db.prepare('SELECT * FROM highlights WHERE id = ?').get(id) ?? null;
+}
+
+export function createHighlight(userId, title) {
+  return Number(db.prepare('INSERT INTO highlights (user_id, title) VALUES (?, ?)').run(userId, title).lastInsertRowid);
+}
+
+export function countHighlights(userId) {
+  return db.prepare('SELECT COUNT(*) AS n FROM highlights WHERE user_id = ?').get(userId).n;
+}
+
+export function addToHighlight(highlightId, storyId) {
+  const n = db.prepare('SELECT COUNT(*) AS n FROM highlight_items WHERE highlight_id = ?').get(highlightId).n;
+  if (n >= MAX_HIGHLIGHT_ITEMS) return false;
+  db.prepare('INSERT INTO highlight_items (highlight_id, story_id) VALUES (?, ?) ON CONFLICT DO NOTHING').run(highlightId, storyId);
+  return true;
+}
+
+export function removeFromHighlight(highlightId, storyId) {
+  db.prepare('DELETE FROM highlight_items WHERE highlight_id = ? AND story_id = ?').run(highlightId, storyId);
+  // Boş kalan öne çıkan silinir
+  if (!db.prepare('SELECT 1 FROM highlight_items WHERE highlight_id = ?').get(highlightId)) db.prepare('DELETE FROM highlights WHERE id = ?').run(highlightId);
+}
+
+export function deleteHighlight(id) {
+  db.prepare('DELETE FROM highlights WHERE id = ?').run(id);
 }
 
 /**
