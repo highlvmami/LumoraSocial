@@ -254,3 +254,45 @@ export function deleteComment(id) {
   db.prepare("DELETE FROM notifications WHERE type = 'post_comment' AND json_extract(data, '$.commentId') = ?").run(id);
   db.prepare('DELETE FROM comments WHERE id = ?').run(id);
 }
+
+/** Keşfet: son 7 günün en çok etkileşim alan paylaşımları (tepki + 2×yorum + 3×yeniden paylaşım). */
+export function getExplore({ viewerId, viewerIsAdmin = false, page = 0, limit = 15 }) {
+  const visibility = viewerIsAdmin ? '1' : VISIBLE_AUTHOR_SQL;
+  const visibilityArgs = viewerIsAdmin ? [] : [viewerId, viewerId];
+  const rows = db
+    .prepare(
+      `SELECT p.id, p.content, p.created_at, p.quote_of, p.has_poll,
+              (SELECT COUNT(*) FROM posts q WHERE q.quote_of = p.id) AS repost_count,
+              u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified,
+              (SELECT COUNT(*) FROM reactions r WHERE r.post_id = p.id)
+                + 2 * (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id)
+                + 3 * (SELECT COUNT(*) FROM posts q WHERE q.quote_of = p.id) AS score
+       FROM posts p JOIN users u ON u.id = p.user_id
+       WHERE p.created_at > datetime('now', '-7 days')
+         AND u.status = 'active'
+         AND ${notBlockedSql('p.user_id')}
+         AND ${visibility}
+       ORDER BY score DESC, p.id DESC
+       LIMIT ? OFFSET ?`
+    )
+    .all(viewerId, viewerId, ...visibilityArgs, limit + 1, page * limit);
+  return { posts: rows.slice(0, limit).map((r) => hydratePost(r, viewerId)), hasMore: rows.length > limit };
+}
+
+/** Son 7 günde en çok kullanılan #etiketler. */
+export function getTrendingTags({ viewerId, limit = 12 }) {
+  const rows = db
+    .prepare(
+      `SELECT p.content FROM posts p JOIN users u ON u.id = p.user_id
+       WHERE p.created_at > datetime('now', '-7 days') AND p.content LIKE '%#%' AND u.status = 'active'
+         AND ${notBlockedSql('p.user_id')} AND ${VISIBLE_AUTHOR_SQL}
+       ORDER BY p.id DESC LIMIT 1000`
+    )
+    .all(viewerId, viewerId, viewerId, viewerId);
+  const counts = new Map();
+  for (const { content } of rows) {
+    const tags = new Set([...content.matchAll(/#([\p{L}\p{N}_]{2,40})/gu)].map((m) => m[1].toLocaleLowerCase('tr')));
+    for (const t of tags) counts.set(t, (counts.get(t) || 0) + 1);
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit).map(([tag, count]) => ({ tag: `#${tag}`, count }));
+}

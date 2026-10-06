@@ -745,6 +745,29 @@ function showBookmarks() {
   );
 }
 
+/** Keşfet: gündemdeki etiketler + son 7 günün popüler paylaşımları */
+function showExplore() {
+  const tags = h('section', { class: 'card explore-tags hidden' });
+  main.replaceChildren(h('div', { class: 'feed-header' }, h('h2', {}, 'Keşfet')), tags);
+  let page = 0;
+  renderPostList(
+    main,
+    async () => {
+      const data = await api(`/posts/explore?page=${page}`);
+      if (page === 0 && data.tags?.length) {
+        tags.replaceChildren(
+          h('h3', {}, 'Gündemdekiler'),
+          h('div', { class: 'tag-chips' }, ...data.tags.map((t) => h('a', { class: 'tag-chip', href: searchHref(t.tag, 'paylasimlar') }, t.tag, h('span', {}, t.count))))
+        );
+        tags.classList.remove('hidden');
+      }
+      page += 1;
+      return data;
+    },
+    'Son 7 günde henüz paylaşım yok. İlk paylaşımı sen yap! '
+  );
+}
+
 /** Tek paylaşım sayfası (bildirimden açılır). */
 async function showPost(id) {
   main.replaceChildren(h('div', { class: 'feed-header' }, h('a', { href: '#/' }, '← Akışa dön')));
@@ -767,6 +790,7 @@ function route() {
   const postMatch = path.match(/^\/p\/(\d+)$/);
   const isSearch = path === '/ara';
   const isBookmarks = path === '/kaydedilenler';
+  const isExplore = path === '/kesfet';
   const messagesMatch = path.match(/^\/mesajlar(?:\/(.+))?$/);
   const settingsMatch = path.match(/^\/ayarlar(?:\/(\w+))?$/);
   const active = userMatch
@@ -783,12 +807,15 @@ function route() {
             ? 'search'
             : isBookmarks
               ? 'bookmarks'
-              : 'feed';
+              : isExplore
+                ? 'explore'
+                : 'feed';
   document.querySelectorAll('#nav a[data-route]').forEach((a) => a.classList.toggle('active', a.dataset.route === active));
 
   if (userMatch) showUser(decodeURIComponent(userMatch[1]));
   else if (postMatch) showPost(postMatch[1]);
   else if (isBookmarks) showBookmarks();
+  else if (isExplore) showExplore();
   else if (isSearch) showSearch(ctx, new URLSearchParams(hash.split('?')[1] || ''));
   else if (messagesMatch) showMessages(ctx, messagesMatch[1] ? decodeURIComponent(messagesMatch[1]) : null);
   else if (settingsMatch) showSettings(ctx, settingsMatch[1] || 'profil', new URLSearchParams(hash.split('?')[1] || ''));

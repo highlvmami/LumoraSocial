@@ -21,6 +21,8 @@ import {
   getComments,
   toggleReaction,
   votePoll,
+  getExplore,
+  getTrendingTags,
   getPoll,
   POLL_MIN_OPTIONS,
   POLL_MAX_OPTIONS,
@@ -111,6 +113,13 @@ router.post('/:id/vote', (req, res) => {
   if (result === 'ended') throw v.bad('Anket sona erdi.');
   if (result !== 'ok') throw new v.HttpError(404, 'Anket bulunamadı.');
   res.json({ poll: getPoll(post.id, req.user.id, post.user_id) });
+});
+
+/** Keşfet: popüler paylaşımlar (?page=0,1,…) ve gündemdeki etiketler. */
+router.get('/explore', (req, res) => {
+  const page = Math.max(0, Math.min(50, Number.parseInt(req.query.page, 10) || 0));
+  const data = getExplore({ viewerId: req.user.id, viewerIsAdmin: req.user.role === 'admin', page });
+  res.json(page === 0 ? { ...data, tags: getTrendingTags({ viewerId: req.user.id }) } : data);
 });
 
 /** Kaydedilen paylaşımlar. */

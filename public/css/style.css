@@ -701,3 +701,11 @@ body.story-open { overflow: hidden; }
 .poll-editor-row .muted { margin-left: auto; }
 .poll-duration { width: auto; padding: 6px 10px; }
 .composer .btn.active { border-color: var(--primary); color: var(--primary); }
+
+/* ================= Keşfet ================= */
+.explore-tags { padding: 16px; }
+.explore-tags h3 { margin: 0 0 10px; font-size: 15px; }
+.tag-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-weight: 600; font-size: 14px; }
+.tag-chip:hover { text-decoration: none; filter: brightness(.97); }
+.tag-chip span { font-size: 12px; opacity: .7; font-weight: 500; }
