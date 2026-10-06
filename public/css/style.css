@@ -874,3 +874,4 @@ label.btn { margin: 0; font-size: 13px; }
   clip-path: polygon(0 100%, 0 30%, 25% 62%, 50% 0, 75% 62%, 100% 30%, 100% 100%);
 }
 @media (prefers-reduced-motion: reduce) { .role-badge.admin::before, .role-badge.admin::after { animation: none; } }
+.post-time { display: block; margin: 0 0 8px; }

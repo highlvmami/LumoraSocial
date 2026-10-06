@@ -242,7 +242,7 @@ function renderPost(post) {
         'div',
         { class: 'who' },
         profileLink(post.author, usernameWithBadge(post.author)),
-        h('div', { class: 'muted small' }, `${post.author.displayName} · ${timeAgo(post.createdAt)}`)
+        h('div', { class: 'muted small' }, post.author.displayName)
       ),
       roleBadge(post.author),
       postMenu(post, () => el)
@@ -251,6 +251,8 @@ function renderPost(post) {
     postImages(post),
     post.poll ? pollView(post) : null,
     post.quote ? quoteCard(post.quote) : null,
+    // Paylaşım zamanı gönderinin sol altında
+    h('time', { class: 'post-time muted small', title: formatDate(post.createdAt) }, timeAgo(post.createdAt)),
     h('div', { class: 'post-actions' }, reactions, repostButton(post)),
     comments
   );
