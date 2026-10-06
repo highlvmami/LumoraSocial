@@ -45,7 +45,8 @@ export function getStoryTray(viewerId) {
     .prepare(
       `SELECT s.id, s.image_url, s.text, s.bg, s.created_at,
               u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified,
-              EXISTS (SELECT 1 FROM story_views v WHERE v.story_id = s.id AND v.viewer_id = ?) AS viewed
+              EXISTS (SELECT 1 FROM story_views v WHERE v.story_id = s.id AND v.viewer_id = ?) AS viewed,
+              (SELECT reaction FROM story_views v WHERE v.story_id = s.id AND v.viewer_id = ?) AS my_reaction
        FROM stories s JOIN users u ON u.id = s.user_id
        WHERE s.expires_at > ?
          AND u.status = 'active'
@@ -53,12 +54,12 @@ export function getStoryTray(viewerId) {
          AND ${notBlockedSql('s.user_id')}
        ORDER BY s.id`
     )
-    .all(viewerId, Date.now(), viewerId, viewerId, viewerId, viewerId);
+    .all(viewerId, viewerId, Date.now(), viewerId, viewerId, viewerId, viewerId);
 
   const groups = new Map();
   for (const r of rows) {
     if (!groups.has(r.user_id)) groups.set(r.user_id, { user: authorOf(r), stories: [] });
-    groups.get(r.user_id).stories.push({ id: r.id, imageUrl: r.image_url, text: r.text, bg: r.bg, createdAt: r.created_at, viewed: Boolean(r.viewed) });
+    groups.get(r.user_id).stories.push({ id: r.id, imageUrl: r.image_url, text: r.text, bg: r.bg, createdAt: r.created_at, viewed: Boolean(r.viewed), myReaction: r.my_reaction ?? null });
   }
   const tray = [...groups.values()].map((g) => ({ ...g, allViewed: g.stories.every((s) => s.viewed), latest: g.stories.at(-1).id }));
   const mine = tray.filter((g) => g.user.id === viewerId);
@@ -70,14 +71,24 @@ export function markViewed(storyId, viewerId) {
   db.prepare('INSERT INTO story_views (story_id, viewer_id) VALUES (?, ?) ON CONFLICT DO NOTHING').run(storyId, viewerId);
 }
 
+/** Hikayeye emoji tepkisi; aynı emoji tekrar seçilirse geri alınır. Yeni tepkiyi (veya null) döner. */
+export function setReaction(storyId, viewerId, emoji) {
+  const current = db.prepare('SELECT reaction FROM story_views WHERE story_id = ? AND viewer_id = ?').get(storyId, viewerId)?.reaction ?? null;
+  const next = current === emoji ? null : emoji;
+  db.prepare(
+    'INSERT INTO story_views (story_id, viewer_id, reaction) VALUES (?, ?, ?) ON CONFLICT(story_id, viewer_id) DO UPDATE SET reaction = excluded.reaction'
+  ).run(storyId, viewerId, next);
+  return next;
+}
+
 export function listViewers(storyId) {
   return db
     .prepare(
-      `SELECT u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified, v.viewed_at
+      `SELECT u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified, v.viewed_at, v.reaction
        FROM story_views v JOIN users u ON u.id = v.viewer_id
        WHERE v.story_id = ?
        ORDER BY v.viewed_at DESC`
     )
     .all(storyId)
-    .map((r) => ({ ...authorOf(r), viewedAt: r.viewed_at }));
+    .map((r) => ({ ...authorOf(r), viewedAt: r.viewed_at, reaction: r.reaction }));
 }

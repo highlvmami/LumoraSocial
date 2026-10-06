@@ -7,6 +7,7 @@ import { api, avatar, h, resizeImage, timeAgo, toast } from './common.js';
 
 const STORY_MS = 5000;
 let backgrounds = [];
+let reactions = [];
 
 /** Akışın en üstüne konan hikaye çubuğu. me: oturumdaki kullanıcı */
 export function storyBar(me) {
@@ -14,7 +15,7 @@ export function storyBar(me) {
   const load = async () => {
     let tray;
     try {
-      ({ tray, backgrounds } = await api('/stories'));
+      ({ tray, backgrounds, reactions } = await api('/stories'));
     } catch {
       bar.remove();
       return;
@@ -152,11 +153,61 @@ function openViewer(tray, groupIndex, me, onClose) {
         }, 'Sil'),
         h('button', { type: 'button', class: 'story-action', onclick: () => (close(), openComposer(onClose)) }, 'Yeni hikaye')
       );
-    } else if (!story.viewed) {
-      story.viewed = true;
-      api(`/stories/${story.id}/view`, { method: 'POST', body: {} }).catch(() => {});
+    } else {
+      if (!story.viewed) {
+        story.viewed = true;
+        api(`/stories/${story.id}/view`, { method: 'POST', body: {} }).catch(() => {});
+      }
+      foot.append(replyBar(group, story));
     }
     schedule(STORY_MS);
+  }
+
+  // Emoji tepkisi ve yazılı yanıt; ikisi de hikaye sahibine mesaj olarak gider
+  function replyBar(group, story) {
+    const emojis = h(
+      'div',
+      { class: 'story-emojis' },
+      ...reactions.map((e) =>
+        h('button', {
+          type: 'button',
+          class: `story-emoji ${story.myReaction === e ? 'mine' : ''}`,
+          title: story.myReaction === e ? 'Tepkini geri al' : 'Tepki ver',
+          onclick: async (ev) => {
+            ev.currentTarget.classList.add('pop');
+            try {
+              const { reaction } = await api(`/stories/${story.id}/react`, { method: 'POST', body: { emoji: e } });
+              story.myReaction = reaction;
+              emojis.querySelectorAll('.story-emoji').forEach((b) => b.classList.toggle('mine', b.textContent === reaction));
+              if (reaction) toast(`${reaction} ${group.user.username} kullanıcısına gönderildi.`);
+            } catch (err) {
+              toast(err.message, 'error');
+            }
+          },
+        }, e)
+      )
+    );
+    const input = h('input', { type: 'text', maxlength: 1000, placeholder: `${group.user.username} kullanıcısına yanıt ver…`, 'aria-label': 'Hikayeye yanıt' });
+    const form = h('form', { class: 'story-reply' }, input, h('button', { type: 'submit', class: 'story-send' }, 'Gönder'));
+    // Yazarken hikaye durur
+    input.addEventListener('focus', () => setPaused(true));
+    input.addEventListener('blur', () => !input.value && setPaused(false));
+    input.addEventListener('keydown', (e) => e.stopPropagation());
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      try {
+        await api(`/stories/${story.id}/reply`, { method: 'POST', body: { text } });
+        input.value = '';
+        input.blur();
+        toast('Yanıtın mesaj olarak gönderildi.');
+        setPaused(false);
+      } catch (err) {
+        toast(err.message, 'error');
+      }
+    });
+    return h('div', { class: 'story-replybar' }, emojis, form);
   }
 
   // Basılı tutunca durur (telefonda parmakla, bilgisayarda fareyle)
@@ -175,7 +226,7 @@ function showViewers(viewers, onDone) {
     { class: 'card modal story-viewers' },
     h('h2', {}, `Görenler (${viewers.length})`),
     viewers.length
-      ? h('div', { class: 'viewer-list' }, ...viewers.map((u) => h('div', { class: 'viewer-row' }, avatar(u, 'sm'), h('b', {}, u.username), h('span', { class: 'muted small' }, timeAgo(u.viewedAt)))))
+      ? h('div', { class: 'viewer-list' }, ...viewers.map((u) => h('div', { class: 'viewer-row' }, avatar(u, 'sm'), h('b', {}, u.username), u.reaction ? h('span', { class: 'viewer-reaction' }, u.reaction) : null, h('span', { class: 'muted small' }, timeAgo(u.viewedAt)))))
       : h('p', { class: 'muted' }, 'Henüz kimse görmedi.'),
     h('div', { class: 'modal-actions' }, h('button', { type: 'button', class: 'btn', 'data-close': true }, 'Kapat'))
   );

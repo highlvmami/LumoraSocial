@@ -357,6 +357,11 @@ const migrations = [
     PRIMARY KEY (story_id, viewer_id)
   );
   `,
+
+  // 11: hikayelere emoji tepkisi
+  `
+  ALTER TABLE story_views ADD COLUMN reaction TEXT;
+  `,
 ];
 
 function schemaVersion() {

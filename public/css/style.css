@@ -266,7 +266,7 @@ td .actions { display: flex; gap: 6px; flex-wrap: wrap; }
 
 .toast {
   position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
-  background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: 10px; font-size: 14px; z-index: 100;
+  background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: 10px; font-size: 14px; z-index: 300;
   box-shadow: var(--shadow);
 }
 .toast.error { background: var(--danger); color: #fff; }
@@ -642,3 +642,17 @@ body.story-open { overflow: hidden; }
 .swatch.selected { border-color: var(--text); box-shadow: 0 0 0 2px var(--surface) inset; }
 .story-compose .modal-actions { align-items: center; }
 .story-compose .spacer { flex: 1; }
+.story-replybar { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.story-emojis { display: flex; justify-content: center; gap: 6px; }
+.story-emoji { border: 0; background: rgba(0, 0, 0, .35); border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; transition: transform .12s; }
+.story-emoji:hover { transform: scale(1.15); }
+.story-emoji.mine { background: rgba(255, 255, 255, .3); box-shadow: 0 0 0 2px #fff inset; }
+.story-emoji.pop { animation: story-pop .3s; }
+@keyframes story-pop { 50% { transform: scale(1.35); } }
+.story-reply { display: flex; gap: 8px; }
+.story-reply input { flex: 1; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .45); background: rgba(0, 0, 0, .35); color: #fff; padding: 10px 16px; }
+.story-reply input::placeholder { color: rgba(255, 255, 255, .7); }
+.story-send { border: 0; background: transparent; color: #fff; font: inherit; font-weight: 700; cursor: pointer; padding: 0 6px; }
+.story-frame:has(.story-replybar) .story-tap { bottom: 130px; }
+.viewer-reaction { font-size: 18px; }
+.story-frame:has(.story-replybar) .story-caption { bottom: 140px; }
