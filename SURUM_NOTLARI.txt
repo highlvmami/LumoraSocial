@@ -77,5 +77,5 @@
        (yönetim panelinden "Denetimci yap" ile atanır)
      - Bilgisayarda Akış ve Keşfet birleşti: Akış'ın üstünde "Takip edilenler / Keşfet" seçimi
      - Telefon bildirimlerinde başlıkta işlemi yapan kişinin adı, altında ne yaptığı yazıyor (uygulama adı tekrar etmiyor)
-     - Gönderilerde kullanıcı adının sağında rol rozeti: Yönetici (hareketli alev kenarlık, üstünde küçük alevler ve taç), Denetimci (mavi kenarlık + büyüteç)
+     - Gönderilerde kullanıcı adının sağında rol rozeti: Yönetici (hareketli alev kenarlık, üstünde küçük alevler, sağ üstte yuvarlak içinde taç), Denetimci (mavi kenarlık + büyüteç)
      - Gönderilerde "... önce" yazısı gönderinin sol altına taşındı
