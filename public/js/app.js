@@ -186,8 +186,8 @@ function renderComments(post, container) {
         dropdown(
           [
             c.author.id !== state.me.id && { label: 'Şikâyet et', onClick: () => openReportDialog('comment', c.id, 'Bu yorum') },
-            canModify(c.author.id) && {
-              label: c.author.id === state.me.id ? 'Yorumu sil' : 'Yorumu sil (yönetici)',
+            (canModify(c.author.id) || post.author.id === state.me.id) && {
+              label: c.author.id === state.me.id || post.author.id === state.me.id ? 'Yorumu sil' : 'Yorumu sil (yönetici)',
               danger: true,
               onClick: async () => {
                 if (!confirm('Yorum silinsin mi?')) return;
@@ -687,9 +687,12 @@ function profileHeader(u) {
               ]
         )
       ),
+      u.adminView
+        ? h('div', { class: 'admin-view-note small' }, 'Yönetici olduğun için bu hesabın gizli içeriğini görüyorsun. Normal üyeler bunları görmez.')
+        : null,
       h('h2', { class: 'hero-name' }, ...nameWithBadge(u), u.privateAccount ? h('span', { class: 'lock', title: 'Gizli hesap' }, 'Gizli hesap') : null),
       h('div', { class: 'muted' }, `@${u.username}`, u.role === 'admin' ? ' · ' : '', u.role === 'admin' ? h('span', { class: 'badge-admin' }, 'Yönetici') : null),
-      u.bio ? h('p', { class: 'bio' }, u.bio) : null,
+      u.bio ? h('p', { class: 'bio' }, linkifyTags(u.bio)) : null,
       facts.length ? h('ul', { class: 'facts' }, facts) : null,
       socials.length ? h('div', { class: 'socials' }, socials) : null,
       u.interests?.length ? h('div', { class: 'chips' }, u.interests.map((i) => h('span', { class: 'chip' }, i))) : null,
@@ -699,7 +702,7 @@ function profileHeader(u) {
 }
 
 function showUser(username) {
-  main.replaceChildren(h('div', { class: 'feed-header' }, h('a', { href: '#/' }, '← Akışa dön')));
+  main.replaceChildren(h('div', { class: 'feed-header back-home' }, h('a', { href: '#/' }, '← Akışa dön')));
   let header;
   const list = renderPostList(
     main,

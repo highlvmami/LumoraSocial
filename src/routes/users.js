@@ -113,6 +113,13 @@ router.get('/:username', (req, res) => {
   const rel = { isSelf, isFollower: status === 'accepted', isAdmin: req.user.role === 'admin' };
   const postCount = db.prepare('SELECT COUNT(*) AS n FROM posts WHERE user_id = ?').get(u.id).n;
   const profile = { ...toProfile(u, rel), postCount, ...getFollowStats(u.id, req.user.id) };
+  // Yönetici, gizli hesabı/gizli bilgileri denetim için görür; arayüzde bunun belirtilmesi için işaret
+  if (rel.isAdmin && !isSelf) {
+    const memberView = toProfile(u, { ...rel, isAdmin: false });
+    const hiddenForMembers =
+      (profile.privateAccount && !rel.isFollower) || ['birthDate', 'location', 'email', 'phone'].some((k) => memberView[k] !== profile[k]);
+    if (hiddenForMembers) profile.adminView = true;
+  }
 
   if (!canViewPostsOf(req.user, u)) {
     return res.json({ user: profile, locked: true, posts: [], hasMore: false });

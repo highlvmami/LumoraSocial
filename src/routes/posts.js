@@ -189,7 +189,9 @@ router.post('/:id/comments', (req, res) => {
 router.delete('/:id/comments/:commentId', (req, res) => {
   const comment = findComment(v.id(req.params.commentId));
   if (!comment || comment.post_id !== v.id(req.params.id)) throw new v.HttpError(404, 'Yorum bulunamadı.');
-  if (!canModify(req.user, comment.user_id)) throw new v.HttpError(403, 'Bu yorumu silemezsiniz.');
+  // Yorumu yazan, paylaşımın sahibi veya yönetici silebilir
+  const postOwner = findPost(comment.post_id)?.user_id;
+  if (!canModify(req.user, comment.user_id) && postOwner !== req.user.id) throw new v.HttpError(403, 'Bu yorumu silemezsiniz.');
   if (comment.user_id !== req.user.id) log(req, 'admin.delete_comment', { targetId: comment.user_id, data: { postId: comment.post_id, preview: comment.content.slice(0, 60) } });
   deleteComment(comment.id);
   res.json({ comments: getComments(comment.post_id, req.user.id) });
