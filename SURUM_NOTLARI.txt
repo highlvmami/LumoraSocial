@@ -75,3 +75,5 @@
      - Uygulama simgesinde okunmamış bildirim sayısı
      - Denetimci rolü: şikâyetleri görür ve sonuçlandırır, gönderi/yorum kaldırabilir
        (yönetim panelinden "Denetimci yap" ile atanır)
+     - Bilgisayarda Akış ve Keşfet birleşti: Akış'ın üstünde "Takip edilenler / Keşfet" seçimi
+     - Telefon bildirimlerinde başlık "LumoraSocial", açınca kimin ne yaptığı yazıyor

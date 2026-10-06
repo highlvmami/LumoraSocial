@@ -592,6 +592,7 @@ function showFeed() {
   main.replaceChildren(
     ...[
       h('div', { class: 'feed-header home-header' }, h('h2', {}, 'Akış')),
+      feedTabs('following'),
       verifyBanner(),
       pushPrompt(),
       storyBar(state.me),
@@ -610,6 +611,12 @@ function showFeed() {
     (before) => api(`/posts?${new URLSearchParams({ scope: 'following', ...(before && { before }) })}`),
     'Takip ettiğin kişilerin paylaşımları burada görünür. Önerilen kişilerden birilerini takip et ya da Keşfet\'e göz at. '
   );
+}
+
+/** Akışın üstündeki seçim: takip edilenler / keşfet (mobilde alt menüde ayrı oldukları için gizli) */
+function feedTabs(active) {
+  const tab = (key, label, href) => h('a', { href, class: active === key ? 'active' : '' }, label);
+  return h('nav', { class: 'tabs feed-tabs main-tabs' }, tab('following', 'Takip edilenler', '#/'), tab('explore', 'Keşfet', '#/kesfet'));
 }
 
 /** Önerilen kişiler: yatay kaydırılan kartlar (mobilde ana sayfada görünür) */
@@ -792,7 +799,8 @@ function showExplore(params = new URLSearchParams()) {
   const tags = h('section', { class: 'card explore-tags hidden' });
   const tab = (key, label, href) => h('a', { href, class: sort === key ? 'active' : '' }, label);
   main.replaceChildren(
-    h('div', { class: 'feed-header' }, h('h2', {}, 'Keşfet')),
+    h('div', { class: 'feed-header home-header' }, h('h2', {}, 'Akış')),
+    feedTabs('explore'),
     search,
     tags,
     h('nav', { class: 'tabs feed-tabs' }, tab('new', 'Tümü', '#/kesfet'), tab('popular', 'Popüler', '#/kesfet?sirala=populer'))
@@ -857,7 +865,9 @@ function route() {
               : isExplore
                 ? 'explore'
                 : 'feed';
-  document.querySelectorAll('#nav a[data-route], #bottom-nav a[data-route]').forEach((a) => a.classList.toggle('active', a.dataset.route === active));
+  document.querySelectorAll('#bottom-nav a[data-route]').forEach((a) => a.classList.toggle('active', a.dataset.route === active));
+  // Masaüstü menüsünde Keşfet, Akış'ın bir sekmesi
+  document.querySelectorAll('#nav a[data-route]').forEach((a) => a.classList.toggle('active', a.dataset.route === (active === 'explore' ? 'feed' : active)));
 
   if (userMatch) showUser(decodeURIComponent(userMatch[1]));
   else if (postMatch) showPost(postMatch[1]);

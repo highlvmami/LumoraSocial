@@ -39,7 +39,8 @@ function sendPush(userId, type, actorId, d) {
     suspicious_login: ['Şüpheli giriş', `${d.device} (IP ${d.ip})`, '/akis#/ayarlar/guvenlik'],
   };
   const [title, body, url] = texts[type] || ['LumoraSocial', 'Yeni bir bildirimin var', '/akis#/bildirimler'];
-  pushToUser(userId, { title, body: body || '', url, tag: `${type}-${d.postId || actorId || ''}` });
+  // Başlıkta uygulama adı; metinde kim ne yaptı (bildirim genişletilince tamamı görünür)
+  pushToUser(userId, { title: 'LumoraSocial', body: body ? `${title}: ${body}` : title, url, tag: `${type}-${d.postId || actorId || ''}` });
 }
 
 export function listNotifications(userId, { before = null, limit = 30 } = {}) {
