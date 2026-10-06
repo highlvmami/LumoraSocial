@@ -492,7 +492,7 @@ td .actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .person-info { color: var(--text); }
 .person-info:hover { text-decoration: none; }
 .person-bio { margin-top: 4px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.hashtag { font-weight: 600; }
+.hashtag, .mention { font-weight: 600; }
 
 /* ================= Görünüm / tema seçimi ================= */
 .theme-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-width: 460px; }
@@ -656,3 +656,13 @@ body.story-open { overflow: hidden; }
 .story-frame:has(.story-replybar) .story-tap { bottom: 130px; }
 .viewer-reaction { font-size: 18px; }
 .story-frame:has(.story-replybar) .story-caption { bottom: 140px; }
+
+/* ================= @bahsetme önerileri ================= */
+.mention-wrap { position: relative; }
+.mention-suggest { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 35; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 4px; max-width: 360px; }
+.mention-option { width: 100%; display: flex; align-items: center; gap: 8px; border: 0; background: transparent; color: var(--text); font: inherit; padding: 6px 8px; border-radius: 8px; cursor: pointer; text-align: left; }
+.mention-option .muted { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mention-option.active, .mention-option:hover { background: var(--surface-2); }
+.comment-input { flex: 1; min-width: 0; }
+.comment-input input { width: 100%; }
+.composer .mention-wrap textarea { width: 100%; }

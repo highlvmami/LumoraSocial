@@ -9,6 +9,7 @@ import { db } from '../db.js';
  *  follow_accepted   actor                     takip isteğin kabul edildi
  *  post_reaction     actor { postId, emoji, preview }             paylaşımına tepki
  *  post_comment      actor { postId, commentId, preview, text }   paylaşımına yorum
+ *  mention           actor { postId, commentId, preview, text }   paylaşımda/yorumda senden bahsetti
  */
 export function notify(userId, type, { actorId = null, data = {} } = {}) {
   db.prepare('INSERT INTO notifications (user_id, type, actor_id, data) VALUES (?, ?, ?, ?)').run(

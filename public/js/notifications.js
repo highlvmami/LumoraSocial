@@ -13,6 +13,10 @@ const TEMPLATES = {
     '',
     [userLink(n.actor), ' paylaşımına yorum yaptı: ', ...postRef(n), h('div', { class: 'notif-quote' }, n.data.text)],
   ],
+  mention: (n) => [
+    '',
+    [userLink(n.actor), n.data.inComment ? ' bir yorumda senden bahsetti: ' : ' bir paylaşımda senden bahsetti: ', postLink(n, 'görüntüle'), h('div', { class: 'notif-quote' }, n.data.text)],
+  ],
   new_follower: (n) => ['', [userLink(n.actor), ' seni takip etmeye başladı.']],
   follow_request: (n) => ['', [userLink(n.actor), ' seni takip etmek istiyor.']],
   follow_accepted: (n) => ['', [userLink(n.actor), ' takip isteğini kabul etti.']],

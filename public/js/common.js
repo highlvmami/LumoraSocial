@@ -321,3 +321,64 @@ export async function logout() {
   await api('/auth/logout', { method: 'POST', body: {} });
   location.href = '/';
 }
+
+/**
+ * Metin kutusunda "@ad" yazılırken kişi önerir; seçilince "@kullaniciadi " olarak tamamlar.
+ * input: <textarea> veya <input>
+ */
+export function attachMentionAutocomplete(input) {
+  const list = h('div', { class: 'mention-suggest hidden', role: 'listbox' });
+  let timer;
+  let items = [];
+  let active = 0;
+  const hide = () => list.classList.add('hidden');
+  const wordAtCursor = () => {
+    const before = input.value.slice(0, input.selectionStart);
+    const m = /(?:^|[^\w.@])@([a-zA-Z0-9_.]{1,24})$/.exec(before);
+    return m ? m[1] : null;
+  };
+  const pick = (u) => {
+    const pos = input.selectionStart;
+    const before = input.value.slice(0, pos).replace(/@[a-zA-Z0-9_.]*$/, `@${u.username} `);
+    input.value = before + input.value.slice(pos);
+    input.setSelectionRange(before.length, before.length);
+    input.dispatchEvent(new Event('input'));
+    hide();
+    input.focus();
+  };
+  const paint = () => {
+    list.replaceChildren(
+      ...items.map((u, i) =>
+        h('button', { type: 'button', class: `mention-option ${i === active ? 'active' : ''}`, onmousedown: (e) => (e.preventDefault(), pick(u)) }, avatar(u, 'sm'), h('b', {}, u.username), h('span', { class: 'muted small' }, u.displayName))
+      )
+    );
+    list.classList.toggle('hidden', !items.length);
+  };
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = wordAtCursor();
+    if (!q) return hide();
+    timer = setTimeout(async () => {
+      try {
+        items = (await api(`/search/users?${new URLSearchParams({ q })}`)).users.slice(0, 6);
+        active = 0;
+        if (wordAtCursor() === q) paint();
+      } catch {
+        hide();
+      }
+    }, 200);
+  });
+  input.addEventListener('keydown', (e) => {
+    if (list.classList.contains('hidden')) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      active = (active + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+      paint();
+    } else if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      pick(items[active]);
+    } else if (e.key === 'Escape') hide();
+  });
+  input.addEventListener('blur', () => setTimeout(hide, 150));
+  return list;
+}

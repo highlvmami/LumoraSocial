@@ -27,6 +27,7 @@ import { log } from '../models/audit.js';
 import { isBlockedEitherWay, toggleBookmark } from '../models/safety.js';
 import { notify, preview, removeReactionNotification } from '../models/notifications.js';
 import { findUserById } from '../models/users.js';
+import { notifyMentions } from '../models/mentions.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -79,6 +80,7 @@ router.post('/', (req, res) => {
   const content = v.str(req.body.content, { field: 'Paylaşım', min: imageIds.length ? 0 : 1, max: 1000 });
   const id = createPost(req.user.id, content, imageIds);
   log(req, 'post.create', { data: { postId: id, images: imageIds.length, preview: content.slice(0, 60) } });
+  notifyMentions({ text: content, actor: req.user, postOwner: req.user, postId: id, postContent: content });
   res.status(201).json({ post: getPost(id, req.user.id) });
 });
 
@@ -131,6 +133,15 @@ router.post('/:id/comments', (req, res) => {
       data: { postId: post.id, commentId, preview: preview(post.content), text: preview(content, 120) },
     });
   }
+  notifyMentions({
+    text: content,
+    actor: req.user,
+    postOwner: findUserById(post.user_id),
+    postId: post.id,
+    postContent: post.content,
+    commentId,
+    skipIds: [post.user_id],
+  });
   res.status(201).json({ comments: getComments(post.id, req.user.id) });
 });
 

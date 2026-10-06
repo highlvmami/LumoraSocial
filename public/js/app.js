@@ -1,4 +1,4 @@
-import { api, avatar, dropdown, formatDate, h, handleForm, logout, nameWithBadge, usernameWithBadge, openReportDialog, openLightbox, resizeImage, SOCIALS, socialHref, timeAgo, toast } from './common.js';
+import { api, avatar, dropdown, formatDate, h, handleForm, logout, nameWithBadge, usernameWithBadge, attachMentionAutocomplete, openReportDialog, openLightbox, resizeImage, SOCIALS, socialHref, timeAgo, toast } from './common.js';
 import { storyBar } from './stories.js';
 import { showSettings } from './settings.js';
 import { showNotifications } from './notifications.js';
@@ -178,7 +178,7 @@ function renderComments(post, container) {
           { class: 'bubble' },
           profileLink(c.author, nameWithBadge(c.author)),
           h('span', { class: 'muted small' }, ` · ${timeAgo(c.createdAt)}`),
-          h('p', {}, c.content)
+          h('p', {}, linkifyTags(c.content))
         ),
         c.author.id !== state.me.id
           ? h('button', { class: 'icon-btn comment-report', title: 'Yorumu şikâyet et', 'aria-label': 'Yorumu şikâyet et', onclick: () => openReportDialog('comment', c.id, 'Bu yorum') }, 'Şikâyet')
@@ -208,7 +208,7 @@ function renderComments(post, container) {
 
 function commentForm(post, container) {
   const input = h('input', { name: 'content', maxlength: 500, placeholder: 'Yorum yaz…', required: true, autocomplete: 'off' });
-  const form = h('form', { class: 'comment-form' }, avatar(state.me, 'sm'), input, h('button', { class: 'btn sm', type: 'submit' }, 'Gönder'));
+  const form = h('form', { class: 'comment-form' }, avatar(state.me, 'sm'), h('div', { class: 'mention-wrap comment-input' }, input, attachMentionAutocomplete(input)), h('button', { class: 'btn sm', type: 'submit' }, 'Gönder'));
   handleForm(form, null, async ({ content }) => {
     const res = await api(`/posts/${post.id}/comments`, { method: 'POST', body: { content } });
     post.comments = res.comments;
@@ -294,9 +294,14 @@ function postMenu(post, getEl) {
   ]);
 }
 
-/** Metindeki #etiketleri arama bağlantısına çevirir (metin olarak kalır, HTML yorumlanmaz). */
+/** Metindeki #etiketleri aramaya, @kullanıcı adlarını profile bağlar (metin olarak kalır, HTML yorumlanmaz). */
 function linkifyTags(text) {
-  return text.split(/(#[\p{L}\p{N}_]{2,40})/u).map((part, i) => (i % 2 ? h('a', { class: 'hashtag', href: searchHref(part, 'paylasimlar') }, part) : part));
+  return text.split(/(#[\p{L}\p{N}_]{2,40}|(?<![\w.@])@[a-zA-Z0-9_.]{3,24})/u).flatMap((part, i) => {
+    if (!(i % 2)) return part;
+    if (part.startsWith('#')) return h('a', { class: 'hashtag', href: searchHref(part, 'paylasimlar') }, part);
+    const name = part.slice(1).replace(/\.+$/, '');
+    return [h('a', { class: 'mention', href: `#/u/${encodeURIComponent(name)}` }, '@' + name), part.slice(1 + name.length)];
+  });
 }
 
 /* ---------------- Akış / profil görünümleri ---------------- */
@@ -393,7 +398,7 @@ function composer(onPosted) {
   const form = h(
     'form',
     { class: 'card composer' },
-    textarea,
+    h('div', { class: 'mention-wrap' }, textarea, attachMentionAutocomplete(textarea)),
     previews,
     h('div', { class: 'row' }, h('div', { class: 'row-left' }, photoBtn, counter), submit)
   );
