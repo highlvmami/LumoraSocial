@@ -18,6 +18,8 @@ export const authorOf = (row, prefix = '') => ({
   avatarColor: row[`${prefix}avatar_color`],
   avatarUrl: row[`${prefix}avatar_url`] ?? null,
   isVerified: Boolean(row[`${prefix}is_verified`]),
+  // Rol rozeti için: yönetici > denetimci > üye
+  role: row.author_role === 'admin' ? 'admin' : row.author_mod ? 'moderator' : 'member',
 });
 
 export const POLL_MIN_OPTIONS = 2;
@@ -113,7 +115,7 @@ export function getFeed({ viewerId, viewerIsAdmin = false, before = null, limit 
     .prepare(
       `SELECT p.id, p.content, p.created_at, p.quote_of, p.has_poll,
               (SELECT COUNT(*) FROM posts q WHERE q.quote_of = p.id) AS repost_count,
-              u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified
+              u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified, u.role AS author_role, u.is_moderator AS author_mod
        FROM posts p JOIN users u ON u.id = p.user_id
        WHERE (? IS NULL OR p.id < ?)
          AND (? IS NULL OR p.user_id = ?)
@@ -138,7 +140,7 @@ export function getPost(id, viewerId) {
     .prepare(
       `SELECT p.id, p.content, p.created_at, p.quote_of, p.has_poll,
               (SELECT COUNT(*) FROM posts q WHERE q.quote_of = p.id) AS repost_count,
-              u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified
+              u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified, u.role AS author_role, u.is_moderator AS author_mod
        FROM posts p JOIN users u ON u.id = p.user_id WHERE p.id = ?`
     )
     .get(id);
@@ -165,7 +167,7 @@ function hydratePost(row, viewerId) {
 function getQuoted(id, viewerId) {
   const row = db
     .prepare(
-      `SELECT p.id, p.content, p.created_at, u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified
+      `SELECT p.id, p.content, p.created_at, u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified, u.role AS author_role, u.is_moderator AS author_mod
        FROM posts p JOIN users u ON u.id = p.user_id
        WHERE p.id = ? AND u.status = 'active' AND ${notBlockedSql('p.user_id')} AND ${VISIBLE_AUTHOR_SQL}`
     )
@@ -234,7 +236,7 @@ export function toggleReaction(postId, userId, emoji) {
 export function getComments(postId, viewerId = 0) {
   return db
     .prepare(
-      `SELECT c.id, c.content, c.created_at, u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified
+      `SELECT c.id, c.content, c.created_at, u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified, u.role AS author_role, u.is_moderator AS author_mod
        FROM comments c JOIN users u ON u.id = c.user_id
        WHERE c.post_id = ? AND ${notBlockedSql('c.user_id')} ORDER BY c.id ASC`
     )
@@ -263,7 +265,7 @@ export function getExplore({ viewerId, viewerIsAdmin = false, page = 0, limit = 
     .prepare(
       `SELECT p.id, p.content, p.created_at, p.quote_of, p.has_poll,
               (SELECT COUNT(*) FROM posts q WHERE q.quote_of = p.id) AS repost_count,
-              u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified,
+              u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified, u.role AS author_role, u.is_moderator AS author_mod,
               (SELECT COUNT(*) FROM reactions r WHERE r.post_id = p.id)
                 + 2 * (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id)
                 + 3 * (SELECT COUNT(*) FROM posts q WHERE q.quote_of = p.id) AS score

@@ -244,6 +244,7 @@ function renderPost(post) {
         profileLink(post.author, usernameWithBadge(post.author)),
         h('div', { class: 'muted small' }, `${post.author.displayName} · ${timeAgo(post.createdAt)}`)
       ),
+      roleBadge(post.author),
       postMenu(post, () => el)
     ),
     post.content ? h('div', { class: 'post-body' }, linkifyTags(post.content)) : null,
@@ -254,6 +255,13 @@ function renderPost(post) {
     comments
   );
   return el;
+}
+
+/** Yönetici / denetimci rozeti (gönderi başlığında, sağda) */
+function roleBadge(user) {
+  if (user.role === 'admin') return h('span', { class: 'role-badge admin', title: 'Yönetici' }, h('span', {}, 'Yönetici'));
+  if (user.role === 'moderator') return h('span', { class: 'role-badge mod', title: 'Denetimci' }, h('span', {}, 'Denetimci'), h('i', { class: 'mag', 'aria-hidden': 'true' }));
+  return null;
 }
 
 /** Yeniden paylaşılan gönderinin küçük kartı */

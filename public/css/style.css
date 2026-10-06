@@ -837,3 +837,21 @@ label.btn { margin: 0; font-size: 13px; }
   .main-tabs { display: none; }
   /* Mobilde Keşfet kendi başlığını gösterir */
 }
+
+/* ================= Rol rozetleri (gönderi başlığı) ================= */
+.role-badge { position: relative; flex: 0 0 auto; display: inline-flex; align-self: center; margin-left: auto; border-radius: 999px; padding: 2px; font-size: 12px; font-weight: 700; letter-spacing: .02em; }
+.role-badge > span { display: block; padding: 3px 10px; border-radius: 999px; background: var(--surface); }
+.post-head .role-badge + .dropdown { margin-left: 4px; }
+/* Yönetici: hareketli alev kenarlık */
+.role-badge.admin { background: linear-gradient(90deg, #ff3d00, #ff9100, #ffd600, #ff6d00, #ff1744, #ff3d00); background-size: 300% 100%; animation: flame 2.4s linear infinite; box-shadow: 0 0 8px rgba(255, 109, 0, .45); }
+.role-badge.admin > span { color: #e65100; }
+:root[data-theme="dark"] .role-badge.admin > span { color: #ffab40; }
+@keyframes flame { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
+/* Denetimci: mavi kenarlık + sağ üstte büyüteç */
+.role-badge.mod { background: #2563eb; }
+.role-badge.mod > span { color: #2563eb; }
+:root[data-theme="dark"] .role-badge.mod > span { color: #7aa7ff; }
+.role-badge .mag { position: absolute; top: -7px; right: -6px; width: 15px; height: 15px; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 1px #2563eb; }
+.role-badge .mag::before { content: ""; position: absolute; left: 3px; top: 3px; width: 6px; height: 6px; border: 1.6px solid #2563eb; border-radius: 50%; }
+.role-badge .mag::after { content: ""; position: absolute; left: 9px; top: 9px; width: 1.6px; height: 4px; background: #2563eb; transform: rotate(-45deg); transform-origin: top; border-radius: 1px; }
+@media (prefers-reduced-motion: reduce) { .role-badge.admin { animation: none; } }

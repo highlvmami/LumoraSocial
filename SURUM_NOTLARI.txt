@@ -77,3 +77,4 @@
        (yönetim panelinden "Denetimci yap" ile atanır)
      - Bilgisayarda Akış ve Keşfet birleşti: Akış'ın üstünde "Takip edilenler / Keşfet" seçimi
      - Telefon bildirimlerinde başlık "LumoraSocial", açınca kimin ne yaptığı yazıyor
+     - Gönderilerde kullanıcı adının sağında rol rozeti: Yönetici (hareketli alev kenarlık), Denetimci (mavi kenarlık + büyüteç)

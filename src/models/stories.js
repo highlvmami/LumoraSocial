@@ -108,7 +108,7 @@ export function getStoryTray(viewerId) {
   const rows = db
     .prepare(
       `SELECT s.id, s.image_url, s.text, s.bg, s.created_at,
-              u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified,
+              u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified, u.role AS author_role, u.is_moderator AS author_mod,
               EXISTS (SELECT 1 FROM story_views v WHERE v.story_id = s.id AND v.viewer_id = ?) AS viewed,
               (SELECT reaction FROM story_views v WHERE v.story_id = s.id AND v.viewer_id = ?) AS my_reaction,
               (SELECT COUNT(*) FROM story_views v WHERE v.story_id = s.id) AS view_count
@@ -149,7 +149,7 @@ export function setReaction(storyId, viewerId, emoji) {
 export function listViewers(storyId) {
   return db
     .prepare(
-      `SELECT u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified, v.viewed_at, v.reaction
+      `SELECT u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified, u.role AS author_role, u.is_moderator AS author_mod, v.viewed_at, v.reaction
        FROM story_views v JOIN users u ON u.id = v.viewer_id
        WHERE v.story_id = ?
        ORDER BY v.viewed_at DESC`
