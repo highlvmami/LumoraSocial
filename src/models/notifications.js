@@ -27,20 +27,21 @@ export function notify(userId, type, { actorId = null, data = {} } = {}) {
 function sendPush(userId, type, actorId, d) {
   const actor = actorId ? db.prepare('SELECT username FROM users WHERE id = ?').get(actorId)?.username : null;
   const post = d.postId ? `/akis#/p/${d.postId}` : '/akis#/bildirimler';
+  // [başlık, metin, adres]: başlıkta işlemi yapan kişi, metinde ne yaptığı
+  const detail = (x) => (x ? `: ${x}` : '');
   const texts = {
-    post_reaction: [`${actor} paylaşımına ${d.emoji} tepkisi verdi`, d.preview, post],
-    post_comment: [`${actor} yorum yaptı`, d.text, post],
-    post_repost: [`${actor} paylaşımını yeniden paylaştı`, d.text || d.preview, post],
-    mention: [`${actor} senden bahsetti`, d.text, post],
-    new_follower: [`${actor} seni takip etmeye başladı`, '', `/akis#/u/${actor}`],
-    follow_request: [`${actor} seni takip etmek istiyor`, '', '/akis#/bildirimler'],
-    follow_accepted: [`${actor} takip isteğini kabul etti`, '', `/akis#/u/${actor}`],
+    post_reaction: [actor, `paylaşımına ${d.emoji} tepkisi verdi${detail(d.preview)}`, post],
+    post_comment: [actor, `paylaşımına yorum yaptı${detail(d.text)}`, post],
+    post_repost: [actor, `paylaşımını yeniden paylaştı${detail(d.text || d.preview)}`, post],
+    mention: [actor, `senden bahsetti${detail(d.text)}`, post],
+    new_follower: [actor, 'seni takip etmeye başladı', `/akis#/u/${actor}`],
+    follow_request: [actor, 'seni takip etmek istiyor', '/akis#/bildirimler'],
+    follow_accepted: [actor, 'takip isteğini kabul etti', `/akis#/u/${actor}`],
     new_device: ['Yeni cihazdan giriş', `${d.device} (IP ${d.ip})`, '/akis#/ayarlar/guvenlik'],
     suspicious_login: ['Şüpheli giriş', `${d.device} (IP ${d.ip})`, '/akis#/ayarlar/guvenlik'],
   };
   const [title, body, url] = texts[type] || ['LumoraSocial', 'Yeni bir bildirimin var', '/akis#/bildirimler'];
-  // Başlıkta uygulama adı; metinde kim ne yaptı (bildirim genişletilince tamamı görünür)
-  pushToUser(userId, { title: 'LS', body: body ? `${title}: ${body}` : title, url, tag: `${type}-${d.postId || actorId || ''}` });
+  pushToUser(userId, { title: title || 'LumoraSocial', body, url, tag: `${type}-${d.postId || actorId || ''}` });
 }
 
 export function listNotifications(userId, { before = null, limit = 30 } = {}) {

@@ -33,7 +33,7 @@ export function sendMessage(senderId, recipientId, content, imageUrl = null) {
   );
   db.prepare("UPDATE conversations SET last_message_id = ?, updated_at = datetime('now') WHERE id = ?").run(id, conv.id);
   const sender = db.prepare('SELECT username FROM users WHERE id = ?').get(senderId)?.username;
-  pushToUser(recipientId, { title: 'LS', body: `${sender} sana mesaj gönderdi: ${content || 'Fotoğraf'}`, url: `/akis#/mesajlar/${sender}`, tag: `msg-${senderId}` });
+  pushToUser(recipientId, { title: sender, body: content || 'Fotoğraf gönderdi', url: `/akis#/mesajlar/${sender}`, tag: `msg-${senderId}` });
   return getMessage(id);
 }
 
