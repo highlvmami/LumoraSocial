@@ -110,7 +110,8 @@ export function getStoryTray(viewerId) {
       `SELECT s.id, s.image_url, s.text, s.bg, s.created_at,
               u.id AS user_id, u.username, u.display_name, u.avatar_color, u.avatar_url, u.is_verified,
               EXISTS (SELECT 1 FROM story_views v WHERE v.story_id = s.id AND v.viewer_id = ?) AS viewed,
-              (SELECT reaction FROM story_views v WHERE v.story_id = s.id AND v.viewer_id = ?) AS my_reaction
+              (SELECT reaction FROM story_views v WHERE v.story_id = s.id AND v.viewer_id = ?) AS my_reaction,
+              (SELECT COUNT(*) FROM story_views v WHERE v.story_id = s.id) AS view_count
        FROM stories s JOIN users u ON u.id = s.user_id
        WHERE s.expires_at > ?
          AND u.status = 'active'
@@ -123,7 +124,7 @@ export function getStoryTray(viewerId) {
   const groups = new Map();
   for (const r of rows) {
     if (!groups.has(r.user_id)) groups.set(r.user_id, { user: authorOf(r), stories: [] });
-    groups.get(r.user_id).stories.push({ id: r.id, imageUrl: r.image_url, text: r.text, bg: r.bg, createdAt: r.created_at, viewed: Boolean(r.viewed), myReaction: r.my_reaction ?? null });
+    groups.get(r.user_id).stories.push({ id: r.id, imageUrl: r.image_url, text: r.text, bg: r.bg, createdAt: r.created_at, viewed: Boolean(r.viewed), myReaction: r.my_reaction ?? null, ...(r.user_id === viewerId && { viewCount: r.view_count }) });
   }
   const tray = [...groups.values()].map((g) => ({ ...g, allViewed: g.stories.every((s) => s.viewed), latest: g.stories.at(-1).id }));
   const mine = tray.filter((g) => g.user.id === viewerId);

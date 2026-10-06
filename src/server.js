@@ -50,11 +50,14 @@ app.use(
     store: new SqliteSessionStore(),
     resave: false,
     saveUninitialized: false,
+    rolling: true, // her kullanımda süre uzar: düzenli giren kullanıcı tekrar giriş yapmaz
     cookie: {
       httpOnly: true,
-      sameSite: 'strict', // başka sitelerden gelen isteklerde çerez gönderilmez (CSRF koruması)
+      // 'lax': uygulamadan veya bağlantıdan açılınca da oturum tanınır; başka sitelerden gelen
+      // POST isteklerinde çerez yine gönderilmez (API ayrıca yalnızca JSON kabul eder → CSRF koruması)
+      sameSite: 'lax',
       secure: config.isProduction,
-      maxAge: 30 * 24 * 60 * 60 * 1000,
+      maxAge: 90 * 24 * 60 * 60 * 1000,
     },
   })
 );

@@ -1,5 +1,5 @@
 import { api, avatar, dropdown, formatDate, h, handleForm, logout, nameWithBadge, usernameWithBadge, attachMentionAutocomplete, openReportDialog, openLightbox, resizeImage, SOCIALS, socialHref, timeAgo, toast } from './common.js';
-import { highlightsRow, storyBar } from './stories.js';
+import { highlightsRow, openComposer as openStoryComposer, storyBar } from './stories.js';
 import { registerServiceWorker } from './push.js';
 import { showSettings } from './settings.js';
 import { showNotifications } from './notifications.js';
@@ -31,11 +31,12 @@ function renderProfileCard() {
     ].filter(Boolean)
   );
   document.getElementById('nav-me').href = `#/u/${encodeURIComponent(me.username)}`;
+  document.getElementById('bottom-me').href = `#/u/${encodeURIComponent(me.username)}`;
   document.getElementById('nav-admin').classList.toggle('hidden', me.role !== 'admin');
 }
 
 function renderUnread() {
-  for (const [id, n] of [['unread-count', state.unread], ['unread-messages', state.unreadMessages]]) {
+  for (const [id, n] of [['unread-count', state.unread], ['unread-messages', state.unreadMessages], ['unread-bell', state.unread], ['unread-messages-bottom', state.unreadMessages]]) {
     const el = document.getElementById(id);
     el.textContent = n > 99 ? '99+' : n;
     el.classList.toggle('hidden', !n);
@@ -181,26 +182,23 @@ function renderComments(post, container) {
           h('span', { class: 'muted small' }, ` · ${timeAgo(c.createdAt)}`),
           h('p', {}, linkifyTags(c.content))
         ),
-        c.author.id !== state.me.id
-          ? h('button', { class: 'icon-btn comment-report', title: 'Yorumu şikâyet et', 'aria-label': 'Yorumu şikâyet et', onclick: () => openReportDialog('comment', c.id, 'Bu yorum') }, 'Şikâyet')
-          : null,
-        canModify(c.author.id)
-          ? h(
-              'button',
-              {
-                class: 'icon-btn',
-                title: 'Yorumu sil',
-                'aria-label': 'Yorumu sil',
-                onclick: async () => {
-                  if (!confirm('Yorum silinsin mi?')) return;
-                  const res = await api(`/posts/${post.id}/comments/${c.id}`, { method: 'DELETE' });
-                  post.comments = res.comments;
-                  renderComments(post, container);
-                },
+        // Şikâyet / silme küçük ⋯ menüsünde
+        dropdown(
+          [
+            c.author.id !== state.me.id && { label: 'Şikâyet et', onClick: () => openReportDialog('comment', c.id, 'Bu yorum') },
+            canModify(c.author.id) && {
+              label: c.author.id === state.me.id ? 'Yorumu sil' : 'Yorumu sil (yönetici)',
+              danger: true,
+              onClick: async () => {
+                if (!confirm('Yorum silinsin mi?')) return;
+                const res = await api(`/posts/${post.id}/comments/${c.id}`, { method: 'DELETE' });
+                post.comments = res.comments;
+                renderComments(post, container);
               },
-              '✕'
-            )
-          : null
+            },
+          ],
+          { title: 'Yorum seçenekleri' }
+        )
       )
     ),
     commentForm(post, container)
@@ -581,14 +579,14 @@ function verifyBanner() {
 }
 
 /** scope: 'all' (genel akış) veya 'following' (takip ettiklerim) */
-function showFeed(scope) {
-  const tab = (key, label, href) => h('a', { href, class: scope === key ? 'active' : '' }, label);
+/** Ana sayfa: hikayeler, önerilen kişiler (mobilde yatay) ve takip ettiklerinin paylaşımları */
+function showFeed() {
   main.replaceChildren(
     ...[
-      h('div', { class: 'feed-header' }, h('h2', {}, 'Akış')),
+      h('div', { class: 'feed-header home-header' }, h('h2', {}, 'Akış')),
       verifyBanner(),
       storyBar(state.me),
-      h('nav', { class: 'tabs feed-tabs' }, tab('all', 'Genel akış', '#/'), tab('following', 'Takip ettiklerim', '#/takip')),
+      suggestionStrip(),
     ].filter(Boolean)
   );
   let list;
@@ -598,14 +596,33 @@ function showFeed(scope) {
       list.prepend(renderPost(post));
     })
   );
-  const query = (before) => new URLSearchParams({ ...(scope === 'following' && { scope }), ...(before && { before }) });
   list = renderPostList(
     main,
-    (before) => api(`/posts?${query(before)}`),
-    scope === 'following'
-      ? 'Takip ettiğin kişilerin paylaşımları burada görünür. Genel akıştan veya önerilen kişilerden birilerini takip et. '
-      : undefined
+    (before) => api(`/posts?${new URLSearchParams({ scope: 'following', ...(before && { before }) })}`),
+    'Takip ettiğin kişilerin paylaşımları burada görünür. Önerilen kişilerden birilerini takip et ya da Keşfet\'e göz at. '
   );
+}
+
+/** Önerilen kişiler: yatay kaydırılan kartlar (mobilde ana sayfada görünür) */
+function suggestionStrip() {
+  const strip = h('section', { class: 'card suggest-strip hidden', 'aria-label': 'Önerilen kişiler' });
+  api('/users/suggestions')
+    .then(({ users }) => {
+      if (!users.length) return;
+      strip.replaceChildren(
+        h('h3', {}, 'Önerilen kişiler'),
+        h(
+          'div',
+          { class: 'suggest-row' },
+          ...users.map((u) =>
+            h('div', { class: 'suggest-card' }, profileLink(u, [avatar(u, 'lg'), h('b', {}, u.username), h('span', { class: 'muted small' }, u.displayName)]), followButton(u, 'none'))
+          )
+        )
+      );
+      strip.classList.remove('hidden');
+    })
+    .catch(() => {});
+  return strip;
 }
 
 /** Profil başlığı: kapak, fotoğraf, isim, bilgiler, sosyal bağlantılar, ilgi alanları, takip. */
@@ -748,26 +765,42 @@ function showBookmarks() {
 }
 
 /** Keşfet: gündemdeki etiketler + son 7 günün popüler paylaşımları */
-function showExplore() {
-  const tags = h('section', { class: 'card explore-tags hidden' });
-  main.replaceChildren(h('div', { class: 'feed-header' }, h('h2', {}, 'Keşfet')), tags);
-  let page = 0;
-  renderPostList(
-    main,
-    async () => {
-      const data = await api(`/posts/explore?page=${page}`);
-      if (page === 0 && data.tags?.length) {
-        tags.replaceChildren(
-          h('h3', {}, 'Gündemdekiler'),
-          h('div', { class: 'tag-chips' }, ...data.tags.map((t) => h('a', { class: 'tag-chip', href: searchHref(t.tag, 'paylasimlar') }, t.tag, h('span', {}, t.count))))
-        );
-        tags.classList.remove('hidden');
-      }
-      page += 1;
-      return data;
-    },
-    'Son 7 günde henüz paylaşım yok. İlk paylaşımı sen yap! '
+function showExplore(params = new URLSearchParams()) {
+  const sort = params.get('sirala') === 'populer' ? 'popular' : 'new';
+  const search = h(
+    'form',
+    { class: 'card explore-search', role: 'search' },
+    h('input', { type: 'search', name: 'q', placeholder: 'Kişi, paylaşım veya #etiket ara…', autocomplete: 'off', maxlength: 80 })
   );
+  search.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = search.q.value.trim();
+    if (q) location.hash = searchHref(q);
+  });
+  const tags = h('section', { class: 'card explore-tags hidden' });
+  const tab = (key, label, href) => h('a', { href, class: sort === key ? 'active' : '' }, label);
+  main.replaceChildren(
+    h('div', { class: 'feed-header' }, h('h2', {}, 'Keşfet')),
+    search,
+    tags,
+    h('nav', { class: 'tabs feed-tabs' }, tab('new', 'Tümü', '#/kesfet'), tab('popular', 'Popüler', '#/kesfet?sirala=populer'))
+  );
+  api('/posts/tags')
+    .then(({ tags: list }) => {
+      if (!list.length) return;
+      tags.replaceChildren(
+        h('h3', {}, 'Gündemdekiler'),
+        h('div', { class: 'tag-chips' }, ...list.map((t) => h('a', { class: 'tag-chip', href: searchHref(t.tag, 'paylasimlar') }, t.tag, h('span', {}, t.count))))
+      );
+      tags.classList.remove('hidden');
+    })
+    .catch(() => {});
+  if (sort === 'popular') {
+    let page = 0;
+    renderPostList(main, async () => api(`/posts/explore?page=${page++}`), 'Son 7 günde henüz paylaşım yok.');
+  } else {
+    renderPostList(main, (before) => api(`/posts${before ? `?before=${before}` : ''}`), 'Henüz paylaşım yok. İlk paylaşımı sen yap! ');
+  }
 }
 
 /** Tek paylaşım sayfası (bildirimden açılır). */
@@ -812,17 +845,17 @@ function route() {
               : isExplore
                 ? 'explore'
                 : 'feed';
-  document.querySelectorAll('#nav a[data-route]').forEach((a) => a.classList.toggle('active', a.dataset.route === active));
+  document.querySelectorAll('#nav a[data-route], #bottom-nav a[data-route]').forEach((a) => a.classList.toggle('active', a.dataset.route === active));
 
   if (userMatch) showUser(decodeURIComponent(userMatch[1]));
   else if (postMatch) showPost(postMatch[1]);
   else if (isBookmarks) showBookmarks();
-  else if (isExplore) showExplore();
+  else if (isExplore) showExplore(new URLSearchParams(hash.split('?')[1] || ''));
   else if (isSearch) showSearch(ctx, new URLSearchParams(hash.split('?')[1] || ''));
   else if (messagesMatch) showMessages(ctx, messagesMatch[1] ? decodeURIComponent(messagesMatch[1]) : null);
   else if (settingsMatch) showSettings(ctx, settingsMatch[1] || 'profil', new URLSearchParams(hash.split('?')[1] || ''));
   else if (path === '/bildirimler') showNotifications(ctx);
-  else showFeed(path === '/takip' ? 'following' : 'all');
+  else showFeed();
   window.scrollTo(0, 0);
 }
 
@@ -867,6 +900,7 @@ window.addEventListener('hashchange', () => {
   setDrawer(false);
   window.scrollTo(0, 0);
 });
+document.getElementById('create-btn').addEventListener('click', openCreateSheet);
 registerServiceWorker();
 checkAndroidUpdate();
 window.addEventListener('hashchange', route);
@@ -901,4 +935,41 @@ async function checkAndroidUpdate() {
   } catch {
     /* sessizce geç */
   }
+}
+
+/* ---------------- Mobil "+" düğmesi: gönderi veya hikaye ---------------- */
+
+function openCreateSheet() {
+  const close = () => backdrop.remove();
+  const option = (title, desc, onClick) =>
+    h('button', { type: 'button', class: 'create-option', onclick: () => (close(), onClick()) }, h('b', {}, title), h('span', { class: 'muted small' }, desc));
+  const sheet = h(
+    'div',
+    { class: 'card create-sheet' },
+    h('div', { class: 'sheet-handle' }),
+    option('Gönderi paylaş', 'Yazı, fotoğraf veya anket', openPostComposer),
+    option('Hikaye ekle', '24 saat sonra kaybolur', () => openStoryComposer(() => location.hash === '#/' || !location.hash ? route() : null))
+  );
+  const backdrop = h('div', { class: 'modal-backdrop sheet-backdrop' }, sheet);
+  backdrop.addEventListener('click', (e) => e.target === backdrop && close());
+  document.body.append(backdrop);
+}
+
+function openPostComposer() {
+  const close = () => backdrop.remove();
+  const box = composer((post) => {
+    close();
+    toast('Paylaşıldı.');
+    const list = main.querySelector('.feed');
+    if (list && ['', '#/'].includes(location.hash)) {
+      list.querySelector('.empty-state')?.remove();
+      list.prepend(renderPost(post));
+    }
+  });
+  box.classList.add('modal', 'composer-modal');
+  box.prepend(h('div', { class: 'composer-modal-head' }, h('b', {}, 'Yeni gönderi'), h('button', { type: 'button', class: 'icon-btn', 'aria-label': 'Kapat', onclick: close }, '✕')));
+  const backdrop = h('div', { class: 'modal-backdrop' }, box);
+  backdrop.addEventListener('click', (e) => e.target === backdrop && close());
+  document.body.append(backdrop);
+  box.querySelector('textarea')?.focus();
 }

@@ -115,6 +115,9 @@ router.post('/:id/vote', (req, res) => {
   res.json({ poll: getPoll(post.id, req.user.id, post.user_id) });
 });
 
+/** Gündemdeki etiketler (Keşfet sayfasının üstü). */
+router.get('/tags', (req, res) => res.json({ tags: getTrendingTags({ viewerId: req.user.id }) }));
+
 /** Keşfet: popüler paylaşımlar (?page=0,1,…) ve gündemdeki etiketler. */
 router.get('/explore', (req, res) => {
   const page = Math.max(0, Math.min(50, Number.parseInt(req.query.page, 10) || 0));

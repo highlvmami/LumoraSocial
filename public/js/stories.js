@@ -1,4 +1,4 @@
-import { api, avatar, h, resizeImage, timeAgo, toast } from './common.js';
+import { api, avatar, dropdown, h, resizeImage, timeAgo, toast } from './common.js';
 
 /*
  * Hikayeler: akışın üstündeki yuvarlak profil çubuğu, tam ekran görüntüleyici ve hikaye ekleme penceresi.
@@ -114,15 +114,37 @@ export function openViewer(tray, groupIndex, me, onClose, { mode = 'live', highl
     const mine = group.user.id === me.id;
     paused = false;
     viewer.classList.remove('paused');
+    sheet.classList.remove('open');
 
     progress.replaceChildren(
       ...group.stories.map((_, i) => h('span', { class: i < si ? 'done' : i === si ? 'active' : '' }, h('i', {})))
     );
     progress.querySelector('.active i')?.style.setProperty('animation-duration', `${STORY_MS}ms`);
 
+    const ownerMenu =
+      mine && mode === 'live'
+        ? dropdown(
+            [
+              { label: 'Öne çıkar', onClick: () => (setPaused(true), openHighlightPicker(me, story, () => setPaused(false))) },
+              { label: 'Yeni hikaye', onClick: () => (close(), openComposer(onClose)) },
+              {
+                label: 'Hikayeyi sil',
+                danger: true,
+                onClick: async () => {
+                  setPaused(true);
+                  if (!confirm('Bu hikaye silinsin mi?')) return setPaused(false);
+                  await api(`/stories/${story.id}`, { method: 'DELETE' });
+                  removeAndContinue('Hikaye silindi.');
+                },
+              },
+            ],
+            { title: 'Hikaye seçenekleri' }
+          )
+        : null;
+    ownerMenu?.querySelector('.dropdown-toggle')?.addEventListener('click', () => setPaused(true));
     head.replaceChildren(
       h('a', { class: 'story-user', href: `#/u/${encodeURIComponent(group.user.username)}`, onclick: close }, avatar(group.user, 'sm'), h('b', {}, group.user.username), h('span', {}, timeAgo(story.createdAt))),
-      h('button', { type: 'button', class: 'story-close', 'aria-label': 'Kapat', onclick: close }, '✕')
+      h('div', { class: 'story-head-actions' }, ownerMenu, h('button', { type: 'button', class: 'story-close', 'aria-label': 'Kapat', onclick: close }, '✕'))
     );
 
     stage.replaceChildren(
@@ -171,30 +193,13 @@ export function openViewer(tray, groupIndex, me, onClose, { mode = 'live', highl
         }, 'Sil')
       );
     } else if (mine) {
-      const viewersBtn = h('button', { type: 'button', class: 'story-action' }, 'Görenler');
-      viewersBtn.addEventListener('click', async () => {
-        setPaused(true);
-        const { viewers } = await api(`/stories/${story.id}/viewers`);
-        showViewers(viewers, () => setPaused(false));
-      });
       foot.append(
-        viewersBtn,
-        h('button', {
-          type: 'button',
-          class: 'story-action danger',
-          onclick: async () => {
-            setPaused(true);
-            if (!confirm('Bu hikaye silinsin mi?')) return setPaused(false);
-            await api(`/stories/${story.id}`, { method: 'DELETE' });
-            group.stories.splice(si, 1);
-            toast('Hikaye silindi.');
-            if (!group.stories.length) return close();
-            si = Math.min(si, group.stories.length - 1);
-            show();
-          },
-        }, 'Sil'),
-        highlightBtn(),
-        h('button', { type: 'button', class: 'story-action', onclick: () => (close(), openComposer(onClose)) }, 'Yeni hikaye')
+        h(
+          'button',
+          { type: 'button', class: 'story-views', title: 'Görenler (yukarı kaydır)', onclick: () => openSheet(story) },
+          h('span', { class: 'eye', 'aria-hidden': 'true' }),
+          String(story.viewCount ?? 0)
+        )
       );
     } else {
       if (!story.viewed) {
@@ -205,6 +210,45 @@ export function openViewer(tray, groupIndex, me, onClose, { mode = 'live', highl
     }
     schedule(STORY_MS);
   }
+
+  // Görenler listesi: hikayenin içinde aşağıdan açılan panel (yukarı kaydırınca ya da sayıya basınca)
+  const sheet = h('div', { class: 'story-sheet', 'aria-label': 'Görenler' });
+  viewer.querySelector('.story-frame').append(sheet);
+  const closeSheet = () => {
+    if (!sheet.classList.contains('open')) return;
+    sheet.classList.remove('open');
+    setPaused(false);
+  };
+  async function openSheet(story) {
+    if (tray[gi].user.id !== me.id || mode !== 'live') return;
+    setPaused(true);
+    sheet.replaceChildren(h('div', { class: 'sheet-handle', onclick: closeSheet }), h('p', { class: 'sheet-empty' }, 'Yükleniyor…'));
+    sheet.classList.add('open');
+    try {
+      const { viewers } = await api(`/stories/${story.id}/viewers`);
+      story.viewCount = viewers.length;
+      sheet.replaceChildren(
+        h('div', { class: 'sheet-handle', onclick: closeSheet }),
+        h('div', { class: 'sheet-title' }, h('b', {}, `Görenler (${viewers.length})`), h('button', { type: 'button', class: 'story-close', 'aria-label': 'Kapat', onclick: closeSheet }, '✕')),
+        viewers.length
+          ? h('div', { class: 'sheet-list' }, ...viewers.map((u) => h('div', { class: 'viewer-row' }, avatar(u, 'sm'), h('b', {}, u.username), u.reaction ? h('span', { class: 'viewer-reaction' }, u.reaction) : null, h('span', { class: 'small sheet-time' }, timeAgo(u.viewedAt)))))
+          : h('p', { class: 'sheet-empty' }, 'Henüz kimse görmedi.')
+      );
+    } catch (err) {
+      toast(err.message, 'error');
+      closeSheet();
+    }
+  }
+  // Parmakla yukarı kaydırma: görenleri aç; aşağı kaydırma: paneli kapat
+  let touchY = null;
+  viewer.addEventListener('touchstart', (e) => (touchY = e.touches[0].clientY), { passive: true });
+  viewer.addEventListener('touchend', (e) => {
+    if (touchY === null) return;
+    const dy = e.changedTouches[0].clientY - touchY;
+    touchY = null;
+    if (dy < -60 && !sheet.classList.contains('open')) openSheet(tray[gi].stories[si]);
+    else if (dy > 60 && sheet.classList.contains('open')) closeSheet();
+  });
 
   // Emoji tepkisi ve yazılı yanıt; ikisi de hikaye sahibine mesaj olarak gider
   function replyBar(group, story) {
