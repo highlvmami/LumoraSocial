@@ -1,11 +1,17 @@
 import { api, avatar, badge, formatDate, h, handleForm, logout, showAlert, toast, confirmDialog, promptDialog } from './common.js';
 
 const { user: me } = await api('/auth/me');
-if (!me || me.role !== 'admin') {
+if (!me || me.role === 'member') {
   location.href = '/admin-giris';
   throw new Error('Yetki yok');
 }
-document.getElementById('whoami').textContent = `${me.displayName} (@${me.username}) olarak giriş yapıldı`;
+document.getElementById('whoami').textContent = `${me.displayName} (@${me.username}) olarak giriş yapıldı${me.role === 'moderator' ? ' · Denetimci' : ''}`;
+// Denetimci yalnızca şikâyetleri görür
+const isModerator = me.role === 'moderator';
+if (isModerator) {
+  document.querySelectorAll('.admin-tabs a[data-view="users"], .admin-tabs a[data-view="logs"]').forEach((a) => a.remove());
+  document.title = 'Denetim Paneli · LumoraSocial';
+}
 document.getElementById('logout-btn').addEventListener('click', logout);
 
 async function loadStats() {
@@ -38,10 +44,14 @@ function userRow(u) {
 
   const actions = [];
   if (!isMe) {
+    const setRole = (role, msg) => () => action(() => api(`/admin/users/${u.id}/role`, { method: 'PATCH', body: { role } }), msg);
     actions.push(
-      u.role === 'admin'
-        ? btn('Üye yap', () => action(() => api(`/admin/users/${u.id}/role`, { method: 'PATCH', body: { role: 'member' } }), 'Yönetici yetkisi kaldırıldı.'))
-        : btn('Yönetici yap', () => action(() => api(`/admin/users/${u.id}/role`, { method: 'PATCH', body: { role: 'admin' } }), 'Kullanıcı yönetici yapıldı.')),
+      u.role === 'admin' ? btn('Üye yap', setRole('member', 'Yönetici yetkisi kaldırıldı.')) : btn('Yönetici yap', setRole('admin', 'Kullanıcı yönetici yapıldı.')),
+      u.role === 'moderator'
+        ? btn('Denetimciliği kaldır', setRole('member', 'Denetimci yetkisi kaldırıldı.'))
+        : u.role === 'member'
+          ? btn('Denetimci yap', setRole('moderator', 'Kullanıcı denetimci yapıldı.'))
+          : null,
       u.status === 'active'
         ? btn('Askıya al', () => action(() => api(`/admin/users/${u.id}/status`, { method: 'PATCH', body: { status: 'banned' } }), 'Kullanıcı askıya alındı.'))
         : btn('Etkinleştir', () => action(() => api(`/admin/users/${u.id}/status`, { method: 'PATCH', body: { status: 'active' } }), 'Kullanıcı etkinleştirildi.'))
@@ -101,7 +111,7 @@ function userRow(u) {
         )
       )
     ),
-    h('td', {}, h('span', { class: `pill ${u.role}` }, u.role === 'admin' ? 'Yönetici' : 'Üye')),
+    h('td', {}, h('span', { class: `pill ${u.role}` }, { admin: 'Yönetici', moderator: 'Denetimci', member: 'Üye' }[u.role])),
     h('td', {}, h('span', { class: `pill ${u.status}` }, u.status === 'active' ? 'Aktif' : 'Askıda')),
     h('td', {}, u.postCount),
     h('td', {}, h('div', { class: 'actions' }, actions))
@@ -159,7 +169,7 @@ const LABELS = {
   'account.privacy': ['', 'Gizlilik değişti', (d) => (d.privateAccount ? 'hesap gizli yapıldı' : 'hesap herkese açık yapıldı')],
   'account.oauth_link': ['', 'Hesap bağlandı', (d) => PROVIDERS[d.provider] || d.provider],
   'account.oauth_unlink': ['', 'Hesap bağlantısı kaldırıldı', (d) => PROVIDERS[d.provider] || d.provider],
-  'admin.role': ['', 'Rol değişti', (d) => (d.role === 'admin' ? 'yönetici yapıldı' : 'üye yapıldı')],
+  'admin.role': ['', 'Rol değişti', (d) => ({ admin: 'yönetici yapıldı', moderator: 'denetimci yapıldı' })[d.role] || 'üye yapıldı'],
   'admin.status': ['', 'Hesap durumu', (d) => (d.status === 'banned' ? 'askıya alındı' : 'etkinleştirildi')],
   'admin.delete_user': ['', 'Kullanıcı silindi', (d) => `${d.displayName} (@${d.username})`],
   'admin.password': ['', 'Şifre sıfırlandı (yönetici)', () => ''],
@@ -304,7 +314,7 @@ function reportCard(r) {
           r.type !== 'user' && r.targetExists
             ? h('button', { class: 'btn sm danger', type: 'button', onclick: act('delete_content', 'İçerik silinsin mi?') }, 'İçeriği sil')
             : null,
-          t && t.status !== 'banned' && t.id !== me.id
+          !isModerator && t && t.status !== 'banned' && t.id !== me.id
             ? h('button', { class: 'btn sm danger', type: 'button', onclick: act('ban_user', `@${t.username} askıya alınsın mı?`) }, 'Kullanıcıyı askıya al')
             : null,
           h('button', { class: 'btn sm', type: 'button', onclick: act('resolve') }, '✓ Çözüldü'),
@@ -334,7 +344,7 @@ reportsMore.addEventListener('click', () => loadReports());
 
 /* Sekmeler: #kullanicilar / #kayitlar */
 function showView() {
-  const view = { '#kayitlar': 'logs', '#sikayetler': 'reports' }[location.hash] || 'users';
+  const view = isModerator ? 'reports' : { '#kayitlar': 'logs', '#sikayetler': 'reports' }[location.hash] || 'users';
   document.querySelectorAll('.admin-tabs a').forEach((a) => a.classList.toggle('active', a.dataset.view === view));
   document.getElementById('view-users').classList.toggle('hidden', view !== 'users');
   document.getElementById('view-logs').classList.toggle('hidden', view !== 'logs');

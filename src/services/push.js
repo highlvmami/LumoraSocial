@@ -51,7 +51,19 @@ export function pushToUser(userId, payload) {
       console.error('[push] hazırlanamadı:', err.message);
       return;
     }
-    const body = JSON.stringify(payload);
+    // Uygulama simgesindeki sayı: okunmamış bildirim + mesaj
+    let badge = 0;
+    try {
+      badge =
+        db.prepare('SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND read_at IS NULL').get(userId).n +
+        db.prepare(
+          `SELECT COUNT(*) AS n FROM messages m JOIN conversations c ON c.id = m.conversation_id
+           WHERE (c.user_a = ? OR c.user_b = ?) AND m.sender_id <> ? AND m.read_at IS NULL`
+        ).get(userId, userId, userId).n;
+    } catch {
+      /* sayı alınamazsa rozetsiz gönder */
+    }
+    const body = JSON.stringify({ ...payload, badge });
     await Promise.all(
       subs.map((s) =>
         webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, body, { TTL: 24 * 3600 }).catch((err) => {

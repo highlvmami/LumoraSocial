@@ -9,6 +9,7 @@ self.addEventListener('push', (event) => {
   } catch {
     data = { title: 'LumoraSocial', body: event.data?.text() || '' };
   }
+  if (data.badge && self.navigator.setAppBadge) self.navigator.setAppBadge(data.badge).catch(() => {});
   event.waitUntil(
     self.registration.showNotification(data.title || 'LumoraSocial', {
       body: data.body || '',

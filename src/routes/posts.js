@@ -1,7 +1,7 @@
 import express, { Router } from 'express';
 import { MAX_IMAGE_BYTES, saveImage } from '../uploads.js';
 import { db } from '../db.js';
-import { requireAuth } from '../middleware/auth.js';
+import { isStaff, requireAuth } from '../middleware/auth.js';
 import * as v from '../validation.js';
 import {
   REACTIONS,
@@ -38,7 +38,7 @@ import { notifyMentions } from '../models/mentions.js';
 const router = Router();
 router.use(requireAuth);
 
-const canModify = (user, ownerId) => user.id === ownerId || user.role === 'admin';
+const canModify = (user, ownerId) => user.id === ownerId || isStaff(user);
 
 /** Paylaşımı bulur; gizli hesaba aitse ve izleyen onaylı takipçi değilse bulunamadı sayılır. */
 function requirePost(id, viewer) {

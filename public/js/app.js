@@ -1,6 +1,6 @@
 import { api, avatar, dropdown, formatDate, h, handleForm, logout, nameWithBadge, usernameWithBadge, attachMentionAutocomplete, openReportDialog, openLightbox, resizeImage, SOCIALS, socialHref, timeAgo, toast, confirmDialog } from './common.js';
 import { highlightsRow, openComposer as openStoryComposer, storyBar } from './stories.js';
-import { registerServiceWorker } from './push.js';
+import { pushPrompt, registerServiceWorker, syncPush } from './push.js';
 import { showSettings } from './settings.js';
 import { showNotifications } from './notifications.js';
 import { showMessages } from './messages.js';
@@ -19,7 +19,7 @@ function renderProfileCard() {
       avatar(me, 'lg'),
       h('div', { class: 'name' }, ...usernameWithBadge(me)),
       h('div', { class: 'muted small' }, me.displayName),
-      me.role === 'admin' ? h('div', {}, h('span', { class: 'badge-admin' }, 'Yönetici')) : null,
+      me.role !== 'member' ? h('div', {}, h('span', { class: 'badge-admin' }, me.role === 'admin' ? 'Yönetici' : 'Denetimci')) : null,
       me.bio ? h('p', { class: 'bio' }, me.bio) : h('p', { class: 'bio muted' }, 'Henüz biyografi yok.'),
       h(
         'div',
@@ -31,7 +31,9 @@ function renderProfileCard() {
     ].filter(Boolean)
   );
   document.getElementById('nav-me').href = `#/u/${encodeURIComponent(me.username)}`;
-  document.getElementById('nav-admin').classList.toggle('hidden', me.role !== 'admin');
+  const navAdmin = document.getElementById('nav-admin');
+  navAdmin.classList.toggle('hidden', me.role === 'member');
+  navAdmin.textContent = me.role === 'moderator' ? 'Denetim paneli' : 'Yönetim paneli';
 }
 
 function renderUnread() {
@@ -41,6 +43,13 @@ function renderUnread() {
     el.classList.toggle('hidden', !n);
   }
   // Mobilde menü kapalıyken okunmamışlar menü düğmesindeki noktayla gösterilir
+  // Uygulama simgesindeki sayı (destekleyen telefonlarda)
+  try {
+    const n = state.unread + state.unreadMessages;
+    if (navigator.setAppBadge) (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {});
+  } catch {
+    /* desteklenmiyor */
+  }
   for (const id of ['menu-dot', 'menu-dot-bottom']) document.getElementById(id).classList.toggle('hidden', !(state.unread || state.unreadMessages));
 }
 
@@ -118,7 +127,7 @@ async function renderSuggestions() {
 
 /* ---------------- Paylaşım kartı ---------------- */
 
-const canModify = (ownerId) => ownerId === state.me.id || state.me.role === 'admin';
+const canModify = (ownerId) => ownerId === state.me.id || state.me.role !== 'member';
 const profileLink = (user, children) => h('a', { href: `#/u/${encodeURIComponent(user.username)}` }, children);
 
 function renderReactions(post, container) {
@@ -584,6 +593,7 @@ function showFeed() {
     ...[
       h('div', { class: 'feed-header home-header' }, h('h2', {}, 'Akış')),
       verifyBanner(),
+      pushPrompt(),
       storyBar(state.me),
       suggestionStrip(),
     ].filter(Boolean)
@@ -690,7 +700,7 @@ function profileHeader(u) {
         ? h('div', { class: 'admin-view-note small' }, 'Yönetici olduğun için bu hesabın gizli içeriğini görüyorsun. Normal üyeler bunları görmez.')
         : null,
       h('h2', { class: 'hero-name' }, ...nameWithBadge(u), u.privateAccount ? h('span', { class: 'lock', title: 'Gizli hesap' }, 'Gizli hesap') : null),
-      h('div', { class: 'muted' }, `@${u.username}`, u.role === 'admin' ? ' · ' : '', u.role === 'admin' ? h('span', { class: 'badge-admin' }, 'Yönetici') : null),
+      h('div', { class: 'muted' }, `@${u.username}`, u.role !== 'member' ? ' · ' : '', u.role !== 'member' ? h('span', { class: 'badge-admin' }, u.role === 'admin' ? 'Yönetici' : 'Denetimci') : null),
       u.bio ? h('p', { class: 'bio' }, linkifyTags(u.bio)) : null,
       facts.length ? h('ul', { class: 'facts' }, facts) : null,
       socials.length ? h('div', { class: 'socials' }, socials) : null,
@@ -906,6 +916,7 @@ window.addEventListener('hashchange', () => {
 });
 document.getElementById('create-btn').addEventListener('click', openCreateSheet);
 registerServiceWorker();
+syncPush();
 checkAndroidUpdate();
 window.addEventListener('hashchange', route);
 setInterval(refreshUnread, 30 * 1000);

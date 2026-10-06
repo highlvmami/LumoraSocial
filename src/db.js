@@ -422,6 +422,11 @@ const migrations = [
   );
   CREATE INDEX idx_push_user ON push_subscriptions(user_id);
   `,
+
+  // 16: denetimci rolü (şikâyetleri inceler, içerik kaldırır)
+  `
+  ALTER TABLE users ADD COLUMN is_moderator INTEGER NOT NULL DEFAULT 0;
+  `,
 ];
 
 function schemaVersion() {

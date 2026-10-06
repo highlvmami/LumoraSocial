@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAdmin } from '../middleware/auth.js';
+import { requireAdmin, requireStaff } from '../middleware/auth.js';
 import * as v from '../validation.js';
 import { removeUpload } from '../uploads.js';
 import { CATEGORIES, listLogs, log, logSummary } from '../models/audit.js';
@@ -23,7 +23,9 @@ import {
 } from '../models/users.js';
 
 const router = Router();
-router.use(requireAdmin);
+// Denetimciler yalnızca şikâyetleri ve istatistikleri görür; geri kalan her şey yöneticiye özel
+router.use(requireStaff);
+router.use((req, res, next) => (req.path === '/stats' || req.path.startsWith('/reports') ? next() : requireAdmin(req, res, next)));
 
 function targetUser(req) {
   const user = findUserById(v.id(req.params.id));
@@ -61,6 +63,7 @@ router.post('/reports/:id', (req, res) => {
   if (!report) throw new v.HttpError(404, 'Şikâyet bulunamadı.');
   if (report.status !== 'open') throw v.bad('Bu şikâyet zaten sonuçlandırılmış.');
   const action = v.oneOf(req.body.action, ['dismiss', 'resolve', 'delete_content', 'ban_user'], 'İşlem');
+  if (action === 'ban_user' && req.user.role !== 'admin') throw new v.HttpError(403, 'Kullanıcıyı askıya almak yöneticiye özeldir.');
   const labels = { dismiss: 'Yok sayıldı', resolve: 'Çözüldü', delete_content: 'İçerik silindi', ban_user: 'Kullanıcı askıya alındı' };
 
   if (action === 'delete_content') {
@@ -111,8 +114,8 @@ router.post('/users', async (req, res) => {
 router.patch('/users/:id/role', (req, res) => {
   const user = targetUser(req);
   const role = req.body.role;
-  if (!['admin', 'member'].includes(role)) throw v.bad('Geçersiz rol.');
-  if (role === 'member') {
+  if (!['admin', 'moderator', 'member'].includes(role)) throw v.bad('Geçersiz rol.');
+  if (role !== 'admin') {
     if (user.id === req.user.id) throw v.bad('Kendi yönetici yetkinizi kaldıramazsınız.');
     guardLastAdmin(user);
   }

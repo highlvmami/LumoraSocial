@@ -825,3 +825,11 @@ body.story-open { overflow: hidden; }
 label.btn { margin: 0; font-size: 13px; }
 .modal { overflow-x: hidden; }
 .composer textarea { overflow-x: hidden; }
+.push-prompt { gap: 10px; }
+.push-prompt-actions { display: flex; gap: 8px; flex-shrink: 0; }
+/* Mobil menü sağdan açılır; alt çubukta/üstte zaten olan bağlantılar menüde gösterilmez */
+@media (max-width: 900px) {
+  .sidebar { left: auto; right: 0; transform: translateX(105%); }
+  #nav a[data-route="feed"], #nav a[data-route="messages"], #nav a[data-route="notifications"], #nav a[data-route="explore"] { display: none; }
+}
+.pill.moderator { background: #e7f5ef; color: #0f766e; }

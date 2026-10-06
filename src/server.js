@@ -123,7 +123,7 @@ app.get('/.well-known/assetlinks.json', (_req, res) => {
   res.json([{ relation: ['delegate_permission/common.handle_all_urls'], target: { namespace: 'android_app', package_name: packageId, sha256_cert_fingerprints: certSha256 } }]);
 });
 app.get('/yonetim', (req, res) => {
-  if (req.user?.role === 'admin') return page('admin.html')(req, res);
+  if (req.user?.role === 'admin' || req.user?.is_moderator) return page('admin.html')(req, res);
   res.redirect(req.user ? '/akis' : '/admin-giris');
 });
 // Uyanık tutma / sağlık kontrolü

@@ -20,6 +20,15 @@ export function requireAuth(req, res, next) {
   next();
 }
 
+/** Yönetici veya denetimci (şikâyetler ve içerik kaldırma) */
+export const isStaff = (u) => Boolean(u && (u.role === 'admin' || u.is_moderator));
+
+export function requireStaff(req, res, next) {
+  if (!req.user) return res.status(401).json({ error: 'Lütfen giriş yapın.' });
+  if (!isStaff(req.user)) return res.status(403).json({ error: 'Bu işlem için denetimci yetkisi gerekir.' });
+  next();
+}
+
 export function requireAdmin(req, res, next) {
   if (!req.user) return res.status(401).json({ error: 'Lütfen giriş yapın.' });
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Bu işlem için yönetici yetkisi gerekir.' });

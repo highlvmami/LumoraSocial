@@ -1,6 +1,6 @@
 import express, { Router } from 'express';
 import { MAX_IMAGE_BYTES, saveImage } from '../uploads.js';
-import { requireAuth } from '../middleware/auth.js';
+import { isStaff, requireAuth } from '../middleware/auth.js';
 import * as v from '../validation.js';
 import { canViewPostsOf, followStatus } from '../models/follows.js';
 import { findByUsername } from '../models/users.js';
@@ -164,7 +164,7 @@ router.delete('/:id', (req, res) => {
   const id = v.id(req.params.id);
   // Sahibi arşivdeki (süresi dolmuş) hikayesini de silebilir
   const story = findOwnStory(id, req.user.id) || findStory(id);
-  if (!story || (story.user_id !== req.user.id && req.user.role !== 'admin')) throw new v.HttpError(404, 'Hikaye bulunamadı.');
+  if (!story || (story.user_id !== req.user.id && !isStaff(req.user))) throw new v.HttpError(404, 'Hikaye bulunamadı.');
   deleteStory(story.id);
   res.json({ ok: true });
 });

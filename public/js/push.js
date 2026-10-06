@@ -33,6 +33,8 @@ async function currentSubscription() {
   return reg ? reg.pushManager.getSubscription() : null;
 }
 
+const report = (err) => api('/push/error', { method: 'POST', body: { message: err?.message || String(err) } }).catch(() => {});
+
 async function enable() {
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') throw new Error('Bildirim izni verilmedi. Tarayıcı ayarlarından bu siteye izin verebilirsin.');
@@ -41,6 +43,51 @@ async function enable() {
   if (!reg) throw new Error('Bu tarayıcı anlık bildirimleri desteklemiyor.');
   const sub = (await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: toKey(publicKey) }));
   await api('/push/subscribe', { method: 'POST', body: { subscription: sub.toJSON() } });
+}
+
+/** İzin daha önce verildiyse aboneliği her açılışta sunucuyla eşitler (silinmiş/yenilenmiş abonelikler için). */
+export async function syncPush() {
+  if (!pushSupported() || Notification.permission !== 'granted') return;
+  try {
+    await enable();
+  } catch (err) {
+    report(err);
+  }
+}
+
+/** Ana sayfada bir kez gösterilen "Bildirimleri aç" çağrısı (izin hiç sorulmadıysa). */
+export function pushPrompt() {
+  let dismissed = false;
+  try {
+    dismissed = localStorage.getItem('pushPromptDismissed') === '1';
+  } catch {
+    /* yok say */
+  }
+  if (dismissed || !pushSupported() || Notification.permission !== 'default') return null;
+  const box = h('section', { class: 'card banner push-prompt' });
+  const close = () => {
+    box.remove();
+    try {
+      localStorage.setItem('pushPromptDismissed', '1');
+    } catch {
+      /* yok say */
+    }
+  };
+  const on = h('button', { type: 'button', class: 'btn sm' }, 'Bildirimleri aç');
+  on.addEventListener('click', async () => {
+    on.disabled = true;
+    try {
+      await enable();
+      toast('Anlık bildirimler açıldı.');
+      close();
+    } catch (err) {
+      report(err);
+      toast(err.message, 'error');
+      on.disabled = false;
+    }
+  });
+  box.append(h('span', {}, h('b', {}, 'Bildirim almak ister misin?'), ' Beğeni, yorum ve mesajlarda telefonuna haber verelim.'), h('div', { class: 'push-prompt-actions' }, h('button', { type: 'button', class: 'btn sm ghost', onclick: close }, 'Şimdi değil'), on));
+  return box;
 }
 
 async function disable() {
@@ -74,7 +121,7 @@ export function pushCard() {
           await disable();
           toast('Bu cihazda anlık bildirimler kapatıldı.');
         } else {
-          await enable();
+          await enable().catch((err) => (report(err), Promise.reject(err)));
           toast('Anlık bildirimler açıldı.');
         }
       } catch (err) {

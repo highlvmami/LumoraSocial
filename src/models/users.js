@@ -38,7 +38,8 @@ export function toPublic(u) {
     avatarColor: u.avatar_color,
     avatarUrl: u.avatar_url ?? null,
     isVerified: Boolean(u.is_verified),
-    role: u.role,
+    // Görünen rol: yönetici > denetimci > üye
+    role: u.role === 'admin' ? 'admin' : u.is_moderator ? 'moderator' : 'member',
     status: u.status,
     createdAt: u.created_at,
   };
@@ -272,8 +273,9 @@ export function countActiveAdmins() {
   return db.prepare("SELECT COUNT(*) AS n FROM users WHERE role = 'admin' AND status = 'active'").get().n;
 }
 
+/** role: 'admin' | 'moderator' | 'member' (denetimci, veritabanında üye + is_moderator olarak tutulur) */
 export function setRole(id, role) {
-  db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, id);
+  db.prepare('UPDATE users SET role = ?, is_moderator = ? WHERE id = ?').run(role === 'admin' ? 'admin' : 'member', role === 'moderator' ? 1 : 0, id);
 }
 
 /** Kullanıcının oturumlarını kapatır; exceptSid verilirse o oturum açık kalır. */

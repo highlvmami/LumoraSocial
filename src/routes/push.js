@@ -16,6 +16,12 @@ router.post('/subscribe', (req, res) => {
   res.json({ ok: true });
 });
 
+/** Telefonda bildirim açılamazsa sebebi sunucu kaydına düşsün (hata ayıklama için) */
+router.post('/error', (req, res) => {
+  console.log(`[push] istemci hatası (@${req.user.username}): ${String(req.body.message || '').slice(0, 300)} | ${String(req.get('user-agent') || '').slice(0, 120)}`);
+  res.json({ ok: true });
+});
+
 router.post('/unsubscribe', (req, res) => {
   removeSubscription(req.user.id, v.str(req.body.endpoint, { field: 'Abonelik', min: 1, max: 1000 }));
   res.json({ ok: true });
