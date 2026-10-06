@@ -102,7 +102,7 @@ app.get('/yonetim', (req, res) => {
 // Uyanık tutma / sağlık kontrolü
 app.get('/saglik', (_req, res) => res.type('text').send('ok'));
 // JS/CSS her açılışta sunucuya sorulur (değişmediyse 304 döner), böylece güncellemeden sonra eski sürüm kalmaz
-app.use(express.static(pub, { index: false, setHeaders: (res, file) => /.(js|css|html)$/.test(file) && res.setHeader('Cache-Control', 'no-cache') }));
+app.use(express.static(pub, { index: false, setHeaders: (res, file) => /\.(js|css|html)$/.test(file) && res.setHeader('Cache-Control', 'no-cache') }));
 // Resimler veritabanından; bulunamazsa eski sürümlerden kalan disk dosyalarına bakılır
 app.use('/uploads', (req, res, next) => {
   let key;
