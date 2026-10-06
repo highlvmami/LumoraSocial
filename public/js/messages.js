@@ -1,4 +1,4 @@
-import { api, avatar, h, handleForm, nameWithBadge, openLightbox, resizeImage, timeAgo, toast } from './common.js';
+import { api, avatar, h, handleForm, nameWithBadge, openLightbox, resizeImage, timeAgo, toast, confirmDialog } from './common.js';
 
 /* Mesajlar: #/mesajlar (sohbet listesi) ve #/mesajlar/:kullaniciAdi (sohbet ekranı) */
 
@@ -94,7 +94,7 @@ async function showChat(ctx, username) {
           title: 'Mesajı sil',
           'aria-label': 'Mesajı sil',
           onclick: async () => {
-            if (!confirm('Bu mesaj silinsin mi?')) return;
+            if (!await confirmDialog('Bu mesaj silinsin mi?')) return;
             await api(`/messages/${m.id}`, { method: 'DELETE' });
             el.replaceWith(bubble({ ...m, deleted: true }));
           },

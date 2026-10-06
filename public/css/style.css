@@ -811,3 +811,17 @@ body.story-open { overflow: hidden; }
   body.drawer-open .drawer-backdrop { bottom: calc(60px + env(safe-area-inset-bottom)); }
 }
 #profile-card { cursor: pointer; }
+
+/* Onay / bilgi pencereleri (tarayıcının kendi pencereleri yerine) */
+.dialog-backdrop { z-index: 400; }
+.dialog { max-width: 400px; overflow-x: hidden; }
+.dialog h2 { font-size: 19px; margin-bottom: 6px; }
+.dialog-text { color: var(--muted); white-space: pre-line; margin: 0 0 4px; line-height: 1.5; }
+.dialog input { margin-top: 12px; }
+
+/* Paylaşım kutusundaki Fotoğraf / Anket düğmeleri aynı hizada ve boyda */
+.composer .row-left { display: flex; align-items: center; gap: 8px; }
+.composer .row-left > .btn { display: inline-flex; align-items: center; justify-content: center; height: 34px; padding: 0 14px; margin: 0; font-size: 13px; line-height: 1; vertical-align: middle; }
+label.btn { margin: 0; font-size: 13px; }
+.modal { overflow-x: hidden; }
+.composer textarea { overflow-x: hidden; }

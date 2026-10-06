@@ -313,8 +313,77 @@ export function handleForm(form, alertEl, fn) {
   });
 }
 
-export function confirmDialog(message) {
-  return window.confirm(message);
+/**
+ * Tarayıcının kendi onay penceresi yerine sitenin tasarımında bir pencere. Promise<boolean> döner.
+ * Onay düğmesinin yazısı ve rengi mesajdan çıkarılır (silinsin → "Sil", engellensin → "Engelle"...).
+ */
+export function confirmDialog(message, { title = 'Emin misin?', confirmText, cancelText = 'Vazgeç', danger } = {}) {
+  const verbs = [
+    [/silinsin/i, 'Sil', true],
+    [/engellensin/i, 'Engelle', true],
+    [/kaldırılsın/i, 'Kaldır', true],
+    [/çıkarılsın/i, 'Çıkar', true],
+    [/kapatılsın|çıkış yapılsın/i, 'Çıkış yap', true],
+    [/askıya/i, 'Askıya al', true],
+  ];
+  const hit = verbs.find(([re]) => re.test(message));
+  const okText = confirmText || hit?.[1] || 'Evet';
+  const isDanger = danger ?? Boolean(hit?.[2]);
+  return new Promise((resolve) => {
+    const done = (value) => {
+      backdrop.remove();
+      document.removeEventListener('keydown', onKey, true);
+      resolve(value);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') (e.stopPropagation(), done(false));
+      if (e.key === 'Enter') (e.preventDefault(), done(true));
+    };
+    const ok = h('button', { type: 'button', class: `btn ${isDanger ? 'danger' : ''}`, onclick: () => done(true) }, okText);
+    const box = h(
+      'div',
+      { class: 'card modal dialog', role: 'alertdialog', 'aria-modal': 'true' },
+      h('h2', {}, title),
+      h('p', { class: 'dialog-text' }, message),
+      h('div', { class: 'modal-actions' }, h('button', { type: 'button', class: 'btn ghost', onclick: () => done(false) }, cancelText), ok)
+    );
+    const backdrop = h('div', { class: 'modal-backdrop dialog-backdrop' }, box);
+    backdrop.addEventListener('click', (e) => e.target === backdrop && done(false));
+    document.addEventListener('keydown', onKey, true);
+    document.body.append(backdrop);
+    ok.focus();
+  });
+}
+
+/** Tarayıcının prompt'u yerine metin/şifre isteyen pencere. Promise<string|null> döner. */
+export function promptDialog(message, { title = 'Bilgi gir', type = 'text', placeholder = '', confirmText = 'Kaydet', minLength = 0 } = {}) {
+  return new Promise((resolve) => {
+    const input = h('input', { type, placeholder, autocomplete: type === 'password' ? 'new-password' : 'off' });
+    const alertEl = h('div', { class: 'alert hidden' });
+    const done = (value) => {
+      backdrop.remove();
+      resolve(value);
+    };
+    const form = h(
+      'form',
+      { class: 'card modal dialog' },
+      h('h2', {}, title),
+      h('p', { class: 'dialog-text' }, message),
+      input,
+      alertEl,
+      h('div', { class: 'modal-actions' }, h('button', { type: 'button', class: 'btn ghost', onclick: () => done(null) }, 'Vazgeç'), h('button', { type: 'submit', class: 'btn' }, confirmText))
+    );
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (input.value.length < minLength) return showAlert(alertEl, `En az ${minLength} karakter olmalı.`);
+      done(input.value);
+    });
+    form.addEventListener('keydown', (e) => e.key === 'Escape' && done(null));
+    const backdrop = h('div', { class: 'modal-backdrop dialog-backdrop' }, form);
+    backdrop.addEventListener('click', (e) => e.target === backdrop && done(null));
+    document.body.append(backdrop);
+    input.focus();
+  });
 }
 
 export async function logout() {

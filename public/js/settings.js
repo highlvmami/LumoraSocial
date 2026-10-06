@@ -1,4 +1,4 @@
-import { api, avatar, bindPasswordConfirm, cropImage, h, handleForm, showAlert, SOCIALS, squareImage, timeAgo, toast } from './common.js';
+import { api, avatar, bindPasswordConfirm, cropImage, h, handleForm, showAlert, SOCIALS, squareImage, timeAgo, toast, confirmDialog } from './common.js';
 
 /* Ayarlar sayfası: Profil · Hesap · Güvenlik · Gizlilik */
 
@@ -73,7 +73,7 @@ function profileTab(ctx) {
     }
   };
   const remove = (endpoint, msg) => async () => {
-    if (!confirm(`${msg} kaldırılsın mı?`)) return;
+    if (!await confirmDialog(`${msg} kaldırılsın mı?`)) return;
     refresh((await api(endpoint, { method: 'DELETE' })).user);
   };
 
@@ -221,7 +221,7 @@ async function accountTab(ctx) {
                 },
               }, 'Bağlantıyı tekrar gönder')
             : null,
-          h('button', { class: 'btn sm ghost', type: 'button', onclick: async () => confirm('E-posta adresi hesabından kaldırılsın mı?') && rerender((await api('/account/email', { method: 'DELETE' })).user) }, 'Kaldır')
+          h('button', { class: 'btn sm ghost', type: 'button', onclick: async () => await confirmDialog('E-posta adresi hesabından kaldırılsın mı?') && rerender((await api('/account/email', { method: 'DELETE' })).user) }, 'Kaldır')
         )
       : h('p', { class: 'muted' }, 'Hesabına bağlı e-posta yok.'),
     emForm,
@@ -272,7 +272,7 @@ async function accountTab(ctx) {
           { class: 'status-row' },
           h('b', {}, me.phone),
           pill(me.phoneVerified),
-          h('button', { class: 'btn sm ghost', type: 'button', onclick: async () => confirm('Telefon numarası hesabından kaldırılsın mı?') && rerender((await api('/account/phone', { method: 'DELETE' })).user) }, 'Kaldır')
+          h('button', { class: 'btn sm ghost', type: 'button', onclick: async () => await confirmDialog('Telefon numarası hesabından kaldırılsın mı?') && rerender((await api('/account/phone', { method: 'DELETE' })).user) }, 'Kaldır')
         )
       : h('p', { class: 'muted' }, 'Hesabına bağlı telefon yok.'),
     me.phone && !me.phoneVerified ? codeForm : null,
@@ -301,7 +301,7 @@ async function accountTab(ctx) {
                     class: 'btn sm ghost',
                     type: 'button',
                     onclick: async () => {
-                      if (!confirm(`${a.label} bağlantısı kaldırılsın mı?`)) return;
+                      if (!await confirmDialog(`${a.label} bağlantısı kaldırılsın mı?`)) return;
                       try {
                         await api(`/account/linked/${a.key}`, { method: 'DELETE' });
                         rerender();
@@ -396,7 +396,7 @@ async function securityTab(ctx) {
 
   const logoutAll = (includeCurrent) => async () => {
     const msg = includeCurrent ? 'Bu cihaz dahil tüm cihazlardan çıkış yapılsın mı?' : 'Bu cihaz dışındaki tüm oturumlar kapatılsın mı?';
-    if (!confirm(msg)) return;
+    if (!await confirmDialog(msg)) return;
     await api('/account/sessions/logout-all', { method: 'POST', body: { includeCurrent } });
     if (includeCurrent) location.replace('/');
     else {

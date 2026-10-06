@@ -1,4 +1,4 @@
-import { api, avatar, dropdown, formatDate, h, handleForm, logout, nameWithBadge, usernameWithBadge, attachMentionAutocomplete, openReportDialog, openLightbox, resizeImage, SOCIALS, socialHref, timeAgo, toast } from './common.js';
+import { api, avatar, dropdown, formatDate, h, handleForm, logout, nameWithBadge, usernameWithBadge, attachMentionAutocomplete, openReportDialog, openLightbox, resizeImage, SOCIALS, socialHref, timeAgo, toast, confirmDialog } from './common.js';
 import { highlightsRow, openComposer as openStoryComposer, storyBar } from './stories.js';
 import { registerServiceWorker } from './push.js';
 import { showSettings } from './settings.js';
@@ -80,7 +80,7 @@ function followButton(user, status, onChange) {
     btn.title = status === 'accepted' ? 'Takibi bırak' : status === 'pending' ? 'İsteği geri çek' : '';
   };
   btn.addEventListener('click', async () => {
-    if (status === 'accepted' && user.privateAccount && !confirm('Gizli hesap: takibi bırakırsan yeniden istek göndermen gerekir. Devam edilsin mi?')) return;
+    if (status === 'accepted' && user.privateAccount && !await confirmDialog('Gizli hesap: takibi bırakırsan yeniden istek göndermen gerekir. Devam edilsin mi?')) return;
     btn.disabled = true;
     try {
       const stats = await api(`/users/${encodeURIComponent(user.username)}/follow`, { method: status === 'none' ? 'POST' : 'DELETE' });
@@ -189,7 +189,7 @@ function renderComments(post, container) {
               label: c.author.id === state.me.id || post.author.id === state.me.id ? 'Yorumu sil' : 'Yorumu sil (yönetici)',
               danger: true,
               onClick: async () => {
-                if (!confirm('Yorum silinsin mi?')) return;
+                if (!await confirmDialog('Yorum silinsin mi?')) return;
                 const res = await api(`/posts/${post.id}/comments/${c.id}`, { method: 'DELETE' });
                 post.comments = res.comments;
                 renderComments(post, container);
@@ -341,7 +341,7 @@ function remaining(endsAt) {
 
 /** Engelle (onaylı). Engellenince sayfa yenilenir; o kişinin içerikleri kaybolur. */
 async function blockUser(user) {
-  if (!confirm(`@${user.username} engellensin mi?
+  if (!await confirmDialog(`@${user.username} engellensin mi?
 
 Birbirinizin paylaşımlarını ve yorumlarını görmezsiniz, takip ve mesajlaşma kapanır. Engeli istediğin zaman Ayarlar > Gizlilik'ten kaldırabilirsin.`)) return;
   try {
@@ -377,7 +377,7 @@ function postMenu(post, getEl) {
       label: mine ? 'Paylaşımı sil' : 'Paylaşımı sil (yönetici)',
       danger: true,
       onClick: async () => {
-        if (!confirm('Bu paylaşım silinsin mi?')) return;
+        if (!await confirmDialog('Bu paylaşım silinsin mi?')) return;
         await api(`/posts/${post.id}`, { method: 'DELETE' });
         getEl().remove();
         toast('Paylaşım silindi.');

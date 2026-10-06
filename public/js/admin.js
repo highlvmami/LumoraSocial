@@ -1,4 +1,4 @@
-import { api, avatar, badge, formatDate, h, handleForm, logout, showAlert, toast } from './common.js';
+import { api, avatar, badge, formatDate, h, handleForm, logout, showAlert, toast, confirmDialog, promptDialog } from './common.js';
 
 const { user: me } = await api('/auth/me');
 if (!me || me.role !== 'admin') {
@@ -48,8 +48,8 @@ function userRow(u) {
     );
   }
   actions.push(
-    btn('Şifre sıfırla', () => {
-      const password = prompt(`@${u.username} için yeni şifre (en az 8 karakter):`);
+    btn('Şifre sıfırla', async () => {
+      const password = await promptDialog(`@${u.username} için yeni şifreyi yaz. Kullanıcı bu şifreyle giriş yapacak.`, { title: 'Şifre sıfırla', type: 'password', placeholder: 'En az 8 karakter', minLength: 8 });
       if (password) action(() => api(`/admin/users/${u.id}/password`, { method: 'POST', body: { password } }), 'Şifre güncellendi.');
     })
   );
@@ -60,8 +60,8 @@ function userRow(u) {
   );
   if (u.avatarUrl) {
     actions.push(
-      btn('Fotoğrafı kaldır', () => {
-        if (confirm(`@${u.username} kullanıcısının profil fotoğrafı kaldırılsın mı?`)) {
+      btn('Fotoğrafı kaldır', async () => {
+        if (await confirmDialog(`@${u.username} kullanıcısının profil fotoğrafı kaldırılsın mı?`)) {
           action(() => api(`/admin/users/${u.id}/avatar`, { method: 'DELETE' }), 'Profil fotoğrafı kaldırıldı.');
         }
       })
@@ -71,8 +71,8 @@ function userRow(u) {
     actions.push(
       btn(
         'Sil',
-        () => {
-          if (confirm(`@${u.username} ve tüm paylaşımları kalıcı olarak silinsin mi?`)) {
+        async () => {
+          if (await confirmDialog(`@${u.username} ve tüm paylaşımları kalıcı olarak silinsin mi?`)) {
             action(() => api(`/admin/users/${u.id}`, { method: 'DELETE' }), 'Kullanıcı silindi.');
           }
         },
@@ -255,7 +255,7 @@ function paintReportCount(n) {
 
 function reportCard(r) {
   const act = (action, confirmText) => async () => {
-    if (confirmText && !confirm(confirmText)) return;
+    if (confirmText && !await confirmDialog(confirmText)) return;
     try {
       const res = await api(`/admin/reports/${r.id}`, { method: 'POST', body: { action } });
       paintReportCount(res.openCount);

@@ -1,4 +1,4 @@
-import { api, avatar, dropdown, h, resizeImage, timeAgo, toast } from './common.js';
+import { api, avatar, dropdown, h, resizeImage, timeAgo, toast, confirmDialog } from './common.js';
 
 /*
  * Hikayeler: akışın üstündeki yuvarlak profil çubuğu, tam ekran görüntüleyici ve hikaye ekleme penceresi.
@@ -132,7 +132,7 @@ export function openViewer(tray, groupIndex, me, onClose, { mode = 'live', highl
                 danger: true,
                 onClick: async () => {
                   setPaused(true);
-                  if (!confirm('Bu hikaye silinsin mi?')) return setPaused(false);
+                  if (!await confirmDialog('Bu hikaye silinsin mi?')) return setPaused(false);
                   await api(`/stories/${story.id}`, { method: 'DELETE' });
                   removeAndContinue('Hikaye silindi.');
                 },
@@ -171,7 +171,7 @@ export function openViewer(tray, groupIndex, me, onClose, { mode = 'live', highl
             class: 'story-action danger',
             onclick: async () => {
               setPaused(true);
-              if (!confirm(`Bu hikaye "${highlight.title}" öne çıkanından çıkarılsın mı?`)) return setPaused(false);
+              if (!await confirmDialog(`Bu hikaye "${highlight.title}" öne çıkanından çıkarılsın mı?`)) return setPaused(false);
               await api(`/stories/highlights/${highlight.id}/items/${story.id}`, { method: 'DELETE' });
               removeAndContinue('Öne çıkandan çıkarıldı.');
             },
@@ -186,7 +186,7 @@ export function openViewer(tray, groupIndex, me, onClose, { mode = 'live', highl
           class: 'story-action danger',
           onclick: async () => {
             setPaused(true);
-            if (!confirm('Bu hikaye kalıcı olarak silinsin mi? Öne çıkanlardan da kaldırılır.')) return setPaused(false);
+            if (!await confirmDialog('Bu hikaye kalıcı olarak silinsin mi? Öne çıkanlardan da kaldırılır.')) return setPaused(false);
             await api(`/stories/${story.id}`, { method: 'DELETE' });
             removeAndContinue('Hikaye silindi.');
           },
