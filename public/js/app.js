@@ -253,7 +253,7 @@ function renderPost(post) {
     post.quote ? quoteCard(post.quote) : null,
     // Paylaşım zamanı gönderinin sol altında
     h('time', { class: 'post-time muted small', title: formatDate(post.createdAt) }, timeAgo(post.createdAt)),
-    h('div', { class: 'post-actions' }, reactions),
+    h('div', { class: 'post-actions' }, reactions, repostButton(post)),
     comments
   );
   return el;
@@ -276,6 +276,12 @@ function quoteCard(q) {
     q.content ? h('div', { class: 'quote-body' }, q.content) : null,
     q.images?.length ? h('img', { class: 'quote-image', src: q.images[0].url, alt: '', loading: 'lazy' }) : null
   );
+}
+
+/** Yeniden paylaş: yazı yerine 🔁 (varsa sayısıyla) */
+function repostButton(post) {
+  const label = post.repostCount ? `🔁 ${post.repostCount}` : '🔁';
+  return h('button', { type: 'button', class: 'reaction-btn repost-btn', title: 'Yeniden paylaş', 'aria-label': 'Yeniden paylaş', onclick: () => openRepostDialog(post) }, label);
 }
 
 /** Yeniden paylaşma penceresi: isteğe bağlı yorum + alıntılanan gönderi önizlemesi */
@@ -373,7 +379,6 @@ Birbirinizin paylaşımlarını ve yorumlarını görmezsiniz, takip ve mesajla�
 function postMenu(post, getEl) {
   const mine = post.author.id === state.me.id;
   return dropdown([
-    { label: post.repostCount ? `🔁 ${post.repostCount}` : '🔁', title: 'Yeniden paylaş', onClick: () => openRepostDialog(post) },
     {
       label: post.bookmarked ? 'Kaydedilenlerden çıkar' : 'Kaydet',
       onClick: async (item) => {
