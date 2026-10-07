@@ -1,8 +1,50 @@
 # LumoraSocial
 
-Arkadaşlar için küçük bir sosyal medya sitesi: üyelik, akış, emoji tepkileri, yorumlar, profil düzenleme ve yönetim paneli.
+Arkadaşlar ve topluluklar için Türkçe bir sosyal medya sitesi: paylaşımlar, hikayeler, mesajlaşma, #etiketler, başarımlar, otomatik içerik denetimi ve yönetim paneli. Telefon için Android uygulaması da var.
 
-**Teknoloji:** Node.js (20+) · Express 5 · SQLite / Turso (`libsql`; yerelde dosya, canlıda bulut veritabanı) · sade HTML/CSS/JS · şifreler bcrypt ile hash'lenir.
+- **Canlı site:** https://lumorasocial.onrender.com
+- **Android uygulaması:** https://lumorasocial.onrender.com/indir
+
+**Teknoloji:** Node.js (20+) · Express 5 · SQLite / Turso (`libsql`; yerelde dosya, canlıda bulut veritabanı) · sade HTML/CSS/JS (çerçevesiz, tek sayfa uygulama) · Web Push · bcrypt.
+
+## Özellikler
+
+### Paylaşım ve akış
+- Yazı, en fazla 4 fotoğraf (tarayıcıda küçültülür, tıklayınca tam ekran) ve anket (2–4 seçenek, süreli) paylaşımı.
+- 6 emoji tepkisi, yorumlar, **yeniden paylaşma** (isteğe bağlı yorumla alıntı).
+- **Akış:** takip ettiklerinin ve kendi paylaşımların; yöneticinin paylaşımları herkesin akışında görünür, böylece yeni üyelerin akışı boş kalmaz.
+- **Keşfet:** tüm paylaşımlar ya da son 7 günün popüler paylaşımları.
+- **#etiketler:** etikete tıklayınca etiket sayfası açılır (toplam gönderi sayısı ve o etiketli gönderiler). **Popüler konular** son 30 günün en çok kullanılan etiketlerini sayılarıyla gösterir.
+- **@bahsetme:** yazarken kullanıcı adı önerisi, bahsedilene bildirim.
+- **Hikayeler:** 24 saat görünür, yazılı ya da fotoğraflı; görenler listesi, emoji tepkisi ve yanıtı (mesaj olarak gider), arşiv ve öne çıkanlar.
+- **Kaydedilenler:** paylaşımı ⋯ menüsünden kaydet, ayrı sayfada listele.
+
+### Etkileşim
+- **Takip:** açık ya da gizli hesap (takip isteği ile), önerilen kişiler.
+- **Mesajlaşma:** birebir mesaj, fotoğraf gönderme, "yazıyor…" göstergesi, "Görüldü", okunmamış sayacı.
+- **Bildirimler:** tepki, yorum, yeniden paylaşım, bahsetme, takip, başarım, yeni cihazdan giriş; telefona anlık bildirim (Web Push) ve uygulama simgesinde okunmamış sayısı.
+- **Başarımlar:** paylaşım, mesaj, takip, takipçi, yorum, alınan tepki, hikaye, anket, etiket ve üyelik süresine göre 21 başarım. Kazanınca bildirim gelir; profilde rozetler, "Başarımlar" sayfasında ilerleme çubukları görünür.
+- **Geri bildirim ve öneri:** üyeler öneri, hata bildirimi ya da diğer başlıklarıyla yazar, durumunu (Yeni / Okundu / Tamamlandı) takip eder; tamamlanınca bildirim alır.
+
+### Profil ve hesap
+- Profil ve kapak fotoğrafı, görünen ad, biyografi, doğum tarihi, konum, web sitesi, sosyal bağlantılar, meslek, eğitim, ilgi alanları, doğrulanmış hesap rozeti (✓), yönetici ve denetimci rozetleri.
+- Kayıt: e-posta, telefon ya da yalnızca kullanıcı adıyla. E-posta doğrulama, şifremi unuttum, Google / GitHub ile giriş (anahtarı girilen sağlayıcı görünür).
+- **Gizlilik:** gizli hesap; doğum tarihi, konum ve iletişim bilgisi için "Herkes / Takipçilerim / Sadece ben"; engelleme.
+- **Güvenlik:** aktif oturumlar ve cihazlar, tek tek ya da hepsinden çıkış, yeni cihazdan ve şüpheli girişte bildirim + e-posta uyarısı.
+- Açık / koyu tema.
+
+### Güvenli topluluk
+- **Otomatik yazı denetimi:** paylaşım, yorum, anket, hikaye, mesaj, kullanıcı adı, isim ve profil bilgilerinde Türkçe ve İngilizce küfür, hakaret ve cinsel içerikli sözcükler reddedilir. `s.i.k`, `4mk`, `f*ck`, `siiiktir` gibi kaçamak yazımları da yakalar; `sıkıldım`, `I got it` gibi masum sözcüklere dokunmaz. Ücretsizdir ve sunucuda çalışır (`src/services/moderation.js`).
+- **Otomatik fotoğraf denetimi:** paylaşım, hikaye, mesaj, profil ve kapak fotoğraflarında çıplaklık ve cinsel içerik [Sightengine](https://sightengine.com) ile kontrol edilir (ayda 2000 fotoğrafa kadar ücretsiz). Anahtar girilmezse denetim atlanır; servis hata verirse site çalışmaya devam eder.
+- **Şikâyet sistemi:** paylaşım, yorum ve kullanıcılar şikâyet edilebilir; yönetim panelinden içerik silme, askıya alma, çözüldü / yok say.
+
+### Yönetim paneli (`/yonetim`)
+- İstatistikler, kullanıcı arama, rol verme (yönetici / denetimci / üye), doğrulama rozeti, askıya alma, şifre sıfırlama, kullanıcı silme, yeni hesap oluşturma.
+- **Şikâyetler**, **Geri bildirimler** ve **Kayıtlar** (giriş, kayıt, başarısız giriş, yönetici işlemleri; 180 gün saklanır) sekmeleri.
+- **Denetimci** rolü yalnızca şikâyetleri görür ve içerik kaldırabilir.
+
+### Android uygulaması
+Site, Trusted Web Activity olarak paketlenmiş bir Android uygulaması olarak da kullanılabilir. `/indir` sayfasından indirilir; yeni sürüm çıkınca uygulama içinde güncelleme şeridi görünür.
 
 ## Çalıştırma
 
@@ -15,97 +57,72 @@ Tarayıcıda `http://localhost:3000` adresini açın. Geliştirirken `npm run de
 
 ## Ayarlar (`.env`)
 
-`.env.example` dosyasını `.env` olarak kopyalayıp düzenleyin:
+`.env.example` dosyasını `.env` olarak kopyalayıp düzenleyin. Yalnızca `SESSION_SECRET` ve `ADMIN_SETUP_KEY` gerekli; gerisi boş bırakılırsa ilgili özellik kapalı kalır ya da yerel yedeğe düşer.
 
 | Değişken | Açıklama |
 |---|---|
 | `PORT` | Sunucu portu (varsayılan 3000) |
 | `SESSION_SECRET` | Oturum çerezlerini imzalayan uzun rastgele değer |
 | `ADMIN_SETUP_KEY` | İlk yönetici kaydında istenen gizli anahtar |
-| `DB_PATH` | Veritabanı dosyası (varsayılan `data/lumora.db`) |
-| `UPLOADS_DIR` | Eski sürümlerden kalan, diske yazılmış resimler (yeni resimler veritabanında tutulur) |
-| `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` | Doldurulursa veriler Turso bulut veritabanında tutulur (boşsa `DB_PATH`) |
+| `DB_PATH` | Yerel veritabanı dosyası (varsayılan `data/lumora.db`) |
+| `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` | Doldurulursa veriler Turso bulut veritabanında tutulur |
 | `NODE_ENV` | HTTPS arkasında canlıya alırken `production` |
-| `APP_URL` | Sitenin dışarıdan açılan adresi; e-posta bağlantıları ve sosyal giriş dönüşleri bununla kurulur |
-| `SMTP_*`, `MAIL_FROM` | E-posta gönderimi (boşsa e-postalar sunucu penceresine yazılır) |
-| `TWILIO_*` | SMS gönderimi (boşsa SMS kodları sunucu penceresine yazılır) |
-| `GOOGLE_*`, `GITHUB_*` | Sosyal giriş; anahtarı olmayan sağlayıcının butonu görünmez |
+| `APP_URL` | Sitenin dışarıdan açılan adresi (e-posta bağlantıları ve sosyal giriş dönüşleri) |
+| `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN`, `MAIL_FROM` | E-postaları Gmail API ile gönderir (SMTP portu kapalı sunucularda da çalışır). İzin için `npm run gmail-izni` |
+| `SMTP_*` | Gmail API yerine SMTP ile e-posta |
+| `TWILIO_*` | SMS doğrulama; boşsa telefonla kayıt gizlenir |
+| `GOOGLE_*`, `GITHUB_*` | Sosyal giriş; anahtarı olmayan sağlayıcının düğmesi görünmez |
+| `SIGHTENGINE_USER`, `SIGHTENGINE_SECRET` | Otomatik fotoğraf denetimi |
 
-`.env` değişince sunucuyu yeniden başlatın.
-
-## Dış servisleri bağlama
-
-Bu servisler ayarlanmadan da site çalışır: e-posta doğrulama bağlantıları ve SMS kodları **sunucu penceresine** yazılır, oradan kopyalanabilir.
-
-- **E-posta (SMTP):** Herhangi bir SMTP hesabı olur. Gmail için Google Hesabı > Güvenlik > *Uygulama şifreleri*'nden bir şifre oluşturup `SMTP_HOST=smtp.gmail.com`, `SMTP_USER`, `SMTP_PASS` girin.
-- **SMS (Twilio):** twilio.com'da hesap açın; *Account SID*, *Auth Token* ve SMS gönderebilen bir numarayı (`TWILIO_FROM`) girin. Ücretlidir.
-- **Google ile giriş:** console.cloud.google.com > API'ler ve Hizmetler > Kimlik bilgileri > *OAuth istemci kimliği* (Web uygulaması). Yetkili yönlendirme URI'si: `APP_URL/auth/google/callback`.
-- **GitHub ile giriş:** github.com > Settings > Developer settings > *OAuth Apps* > New. Callback URL: `APP_URL/auth/github/callback`.
+E-posta ayarlanmazsa doğrulama bağlantıları sunucu penceresine yazılır. Anlık bildirim (Web Push) anahtarları ilk açılışta otomatik üretilip veritabanında saklanır.
 
 ## Canlıya alma (Render + Turso, ücretsiz)
 
 1. turso.tech'te bir veritabanı ve token oluşturun.
 2. Render'da Web Service açın: Build `npm install`, Start `npm start`.
-3. Ortam değişkenleri: `NODE_ENV=production`, `SESSION_SECRET`, `ADMIN_SETUP_KEY`, `APP_URL` (Render adresi), `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`.
-4. Ücretsiz planda site 15 dakika boşta kalınca uyur; UptimeRobot gibi bir servisle `/saglik` adresine 10 dakikada bir istek atarak açık tutulabilir.
+3. Ortam değişkenleri: `NODE_ENV=production`, `SESSION_SECRET`, `ADMIN_SETUP_KEY`, `APP_URL`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` ve kullanmak istediğiniz servislerin anahtarları.
+4. Ücretsiz planda site 15 dakika boşta kalınca uyur; bir izleme servisiyle `/saglik` adresine düzenli istek atarak açık tutulabilir.
+
+Fotoğraflar diske değil veritabanına yazılır, bu yüzden Render'ın geçici diski sorun olmaz.
 
 ## İlk yönetici
 
 1. Giriş ekranının sağ altındaki **Admin girişi** bağlantısına tıklayın.
-2. **İlk yönetici kaydı** sekmesinde `.env` içindeki `ADMIN_SETUP_KEY` değerini ve hesap bilgilerini girin.
-3. Bu kayıt **yalnızca bir kez** yapılabilir; sonrasında ekran kapanır. Diğer yöneticiler yönetim panelinden eklenir.
-
-## Özellikler
-
-- **Kayıt / giriş:** e-posta, telefon veya yalnızca kullanıcı adıyla kayıt; şifre tekrarı kontrolü; kullanıcı adı, e-posta ya da telefonla giriş; Google / GitHub ile giriş; e-posta doğrulama bağlantısı, SMS doğrulama kodu; şifremi unuttum (e-posta bağlantısı veya SMS kodu).
-- **Güvenlik:** aktif oturumların ve tanınan cihazların listesi, tek oturumu veya tüm cihazları kapatma, yeni cihazdan ve şüpheli girişte (3+ hatalı denemeden sonra) bildirim + e-posta uyarısı. Şifre değişince diğer oturumlar kapanır.
-- **Profil:** profil ve kapak fotoğrafı, kullanıcı adı, görünen ad, biyografi, doğum tarihi, konum, web sitesi, sosyal medya bağlantıları, meslek, eğitim, ilgi alanları, katılım tarihi, yöneticinin verdiği doğrulanmış hesap rozeti (✓).
-- **Gizlilik:** gizli hesap (takip isteğiyle; paylaşımlar yalnızca onaylı takipçilere), doğum tarihi / konum / iletişim bilgisi için "Herkes · Takipçilerim · Sadece ben".
-- **Tema:** varsayılan açık tema; Ayarlar > Görünüm'den veya her sayfadaki "🌙 Koyu tema / ☀️ Açık tema" düğmesiyle değiştirilir. Seçim cihazda saklanır.
-- **Arama:** sol üstteki kutudan veya "🔍 Ara" sayfasından kişi (kullanıcı adı, isim, biyografi) ve paylaşım arama; paylaşımlardaki #etiketler tıklanınca o etiketin paylaşımları listelenir. Gizli hesap kuralları aramada da geçerli.
-- **Kaydetme:** paylaşımdaki 📑 ile kaydedilir, "🔖 Kaydedilenler" sayfasında listelenir (yalnızca kendin görürsün).
-- **Engelleme:** profil veya paylaşım menüsünden (⋯); iki taraf birbirinin paylaşım, yorum ve profilini görmez, takip ve mesajlaşma kapanır. Engellenenler Ayarlar > Gizlilik'te.
-- **Şikâyet:** paylaşım, yorum ve kullanıcı şikâyet edilebilir (sebep + açıklama). Yönetim panelindeki "🚩 Şikâyetler" sekmesinde içerik silme, kullanıcıyı askıya alma, çözüldü / yok say işlemleri; aynı içerikteki tüm şikâyetler birlikte kapanır.
-- **Mesajlaşma:** birebir özel mesaj; sohbet listesi, okunmamış sayacı, "Görüldü" bilgisi, kendi mesajını silme, birkaç saniyede bir canlı yenileme. Gizli hesaplara yalnızca takipçileri yeni mesaj atabilir.
-- **Bildirimler:** paylaşımına tepki ve yorum (tıklayınca paylaşım açılır; tepki geri alınınca bildirim de silinir), yeni takipçi, takip isteği (onayla / sil), istek kabul edildi, yeni cihaz, şüpheli giriş.
-
-- **Takip:** üyeler birbirini takip eder; akışta **Genel akış** (herkes) ve **Takip ettiklerim** (takip edilenler + kendi paylaşımların) sekmeleri, profillerde takipçi/takip sayıları, solda önerilen kişiler.
-- **Profil fotoğrafı:** JPG/PNG/WEBP yüklenir, tarayıcıda kare kırpılıp küçültülür (konum bilgisi silinir), en fazla 2 MB; yöneticiler uygunsuz fotoğrafı kaldırabilir.
-- **Üye:** paylaşım yapma ve silme (paylaşım başına en fazla 4 fotoğraf; tarayıcıda küçültülür, tıklayınca tam ekran açılır), 6 emoji tepkisi (aç/kapa), yorum yapma ve silme, diğer üyelerin profil sayfaları.
-- **Yönetici kayıtları (log):** panelde "Kayıtlar" sekmesi; üye kayıtları, girişler/çıkışlar, başarısız girişler (sebebiyle), hesap değişiklikleri, yönetici işlemleri ve paylaşımlar zaman, kişi, IP ve cihazla listelenir; türe göre filtre ve arama, son 24 saat özeti. 180 günden eski kayıtlar silinir.
-- **Yönetici:** istatistikler, kullanıcı arama (e-posta dahil), doğrulama rozeti verme, yönetici yap / üye yap, askıya al / etkinleştir, şifre sıfırla, kullanıcı silme, yeni üye veya yönetici oluşturma, her paylaşım ve yorumu silebilme. Son yönetici kaldırılamaz.
-- **Teknik güvenlik:** bcrypt şifre hash'i, SQLite'ta kalıcı oturumlar, `SameSite=Strict` çerezler, yalnızca JSON kabul eden API, hatalı giriş/anahtar denemelerinde hız sınırı, CSP başlıkları, tüm kullanıcı metni `textContent` ile basılır.
+2. **İlk yönetici kaydı** sekmesinde `ADMIN_SETUP_KEY` değerini ve hesap bilgilerini girin.
+3. Bu kayıt **yalnızca bir kez** yapılabilir; diğer yöneticiler yönetim panelinden eklenir.
 
 ## Proje yapısı
 
 ```
 src/
-  server.js          Express uygulaması, sayfa yönlendirmeleri
+  server.js          Express uygulaması, sayfa yönlendirmeleri, açılış görevleri
   config.js          .env okuma
-  db.js              SQLite bağlantısı + sürümlü şema göçleri
-  sessionStore.js    Oturumları SQLite'ta saklar
-  validation.js      Girdi doğrulama yardımcıları
-  middleware/        auth (giriş/rol kontrolü), rateLimit
-  uploads.js         Resim kaydetme (profil, kapak)
-  models/            users, posts, follows, notifications (SQL sorguları)
-  routes/            auth, oauth, account, users, posts, notifications, admin
-  services/          mailer (SMTP), sms (Twilio), tokens (tek kullanımlık kodlar),
-                     verification, devices (yeni/şüpheli giriş), session, oauthProviders
+  db.js              libsql bağlantısı (yerel / Turso) + sürümlü şema göçleri
+  validation.js      Girdi doğrulama ve yazı denetimi
+  uploads.js         Resim kaydetme (veritabanına) ve fotoğraf denetimi
+  middleware/        auth (giriş / rol kontrolü), rateLimit
+  models/            users, posts, follows, messages, stories, notifications,
+                     achievements, feedback, safety (engelleme, şikâyet), audit (kayıtlar)
+  routes/            auth, oauth, account, users, posts, messages, stories,
+                     notifications, search, reports, feedback, push, admin
+  services/          moderation (yazı + fotoğraf denetimi), mailer, sms, push,
+                     devices, tokens, verification, session, oauthProviders
 public/
-  index.html         Üye giriş/kayıt
-  admin-login.html   Yönetici girişi + ilk yönetici kaydı
-  app.html           Akış, profil, bildirimler, ayarlar (tek sayfa)
-  forgot.html        Şifremi unuttum / şifre sıfırlama
-  verified.html      E-posta doğrulama sonucu
+  index.html         Giriş / kayıt
+  app.html           Akış, profil, mesajlar, ayarlar… (tek sayfa)
   admin.html         Yönetim paneli
-  css/style.css      Tüm stiller (açık/koyu tema)
-  js/                app.js, settings.js, notifications.js, common.js, …
-data/                Veritabanı ve yüklenen resimler (git'e eklenmez)
+  indir.html         Android uygulaması indirme sayfası
+  sw.js              Anlık bildirimler için service worker
+  css/style.css      Tüm stiller (açık / koyu tema)
+  js/                app.js, messages.js, stories.js, settings.js, admin.js, …
+SURUM_NOTLARI.txt    Sürüm notları
 ```
 
 ## Yeni özellik eklerken
 
-- **Veritabanı:** `src/db.js` içindeki `migrations` dizisine yeni bir eleman ekleyin (mevcutları değiştirmeyin). Sunucu açılışta eksik göçleri otomatik uygular, veriler korunur.
-- **API:** `src/routes/` altına yeni bir router ekleyip `server.js`'te `app.use('/api/...', ...)` ile bağlayın.
-- **Emoji tepkileri:** `src/models/posts.js` içindeki `REACTIONS` listesini düzenleyin.
-- **Yedek:** sunucu kapalıyken `data/` klasörünü (veritabanı + yüklenen resimler) kopyalayın.
+- **Veritabanı:** `src/db.js` içindeki `migrations` dizisine yeni bir eleman ekleyin (mevcutları değiştirmeyin); sunucu açılışta eksik göçleri uygular.
+- **Sorgular:** Turso adlı parametreleri (`:id`) desteklemediği için her zaman `?` kullanın.
+- **API:** `src/routes/` altına router ekleyip `server.js`'te `app.use('/api/...', ...)` ile bağlayın.
+- **Başarımlar:** `src/models/achievements.js` içindeki `ACHIEVEMENTS` listesine satır ekleyin.
+- **Yasaklı sözcükler:** `src/services/moderation.js` içindeki `RULES` listesini düzenleyin.
+- **Emoji tepkileri:** `src/models/posts.js` içindeki `REACTIONS` listesi.
