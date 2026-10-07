@@ -278,10 +278,13 @@ function quoteCard(q) {
   );
 }
 
-/** Yeniden paylaş: yazı yerine 🔁 (varsa sayısıyla) */
+/** Yeniden paylaş: yazı yerine siyah-beyaz dönen ok (varsa sayısıyla) */
 function repostButton(post) {
-  const label = post.repostCount ? `🔁 ${post.repostCount}` : '🔁';
-  return h('button', { type: 'button', class: 'reaction-btn repost-btn', title: 'Yeniden paylaş', 'aria-label': 'Yeniden paylaş', onclick: () => openRepostDialog(post) }, label);
+  const btn = h('button', { type: 'button', class: 'reaction-btn repost-btn', title: 'Yeniden paylaş', 'aria-label': 'Yeniden paylaş', onclick: () => openRepostDialog(post) });
+  btn.innerHTML =
+    '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>';
+  if (post.repostCount) btn.append(h('span', {}, post.repostCount));
+  return btn;
 }
 
 /** Yeniden paylaşma penceresi: isteğe bağlı yorum + alıntılanan gönderi önizlemesi */

@@ -672,7 +672,8 @@ body.story-open { overflow: hidden; }
 .chat-typing { padding: 4px 16px 0; font-size: 13px; color: var(--muted); font-style: italic; }
 
 /* ================= Yeniden paylaşma ================= */
-.repost-btn { flex: 0 0 auto; }
+.repost-btn { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; color: var(--text); }
+.repost-btn:hover { color: var(--text); }
 .quote-card { display: block; margin: 0 0 12px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; color: var(--text); background: var(--surface-2); }
 .quote-card:hover { text-decoration: none; border-color: var(--primary); }
 .quote-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
