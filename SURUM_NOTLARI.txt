@@ -83,3 +83,5 @@
      - Yeniden paylaş düğmesi gönderinin altında eski yerinde, yazı yerine siyah-beyaz dönen ok simgesiyle (⋯ menüsünden kaldırıldı)
      - Otomatik yazı denetimi: paylaşım, yorum, anket, hikaye ve hikaye yanıtı, mesaj, kullanıcı adı, isim ve tüm profil bilgilerinde Türkçe/İngilizce küfür, hakaret ve cinsel içerikli sözcükler (sex, seks, porno vb.) reddediliyor (s.i.k, 4mk, f*ck gibi kaçamak yazımlar dahil)
      - Otomatik fotoğraf denetimi: paylaşım, hikaye, mesaj, profil ve kapak fotoğraflarında çıplaklık/cinsel içerik reddediliyor (Sightengine anahtarları girilince devreye girer)
+     - #etiketler: gönderideki #etikete tıklayınca o etiketin sayfası açılıyor (toplam gönderi sayısı ve o etiketli gönderiler)
+     - Popüler konular: son 30 günün en çok kullanılan etiketleri ve gönderi sayıları (bilgisayarda sol sütunda, telefonda Keşfet'te)

@@ -427,6 +427,15 @@ const migrations = [
   `
   ALTER TABLE users ADD COLUMN is_moderator INTEGER NOT NULL DEFAULT 0;
   `,
+  // 17: #etiketler (popüler konular ve etiket sayfası)
+  `
+  CREATE TABLE post_tags (
+    post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    tag TEXT NOT NULL,
+    PRIMARY KEY (post_id, tag)
+  );
+  CREATE INDEX idx_post_tags_tag ON post_tags(tag, post_id);
+  `,
 ];
 
 function schemaVersion() {

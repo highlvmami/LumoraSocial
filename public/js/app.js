@@ -125,6 +125,41 @@ async function renderSuggestions() {
   );
 }
 
+/** Etiket sayfasının adresi (#fakulte → #/etiket/fakulte) */
+const tagHref = (tag) => `#/etiket/${encodeURIComponent(tag.replace(/^#/, '').toLocaleLowerCase('tr'))}`;
+
+/** Sağ sütundaki "Popüler konular": son 30 günün en çok kullanılan etiketleri ve gönderi sayıları */
+async function renderTopics() {
+  const card = document.getElementById('topics');
+  if (!card) return;
+  try {
+    const { tags } = await api('/posts/tags');
+    card.classList.toggle('hidden', !tags.length);
+    card.replaceChildren(
+      h('h3', {}, 'Popüler konular'),
+      ...tags.map((t) => h('a', { class: 'topic', href: tagHref(t.tag) }, h('b', {}, t.tag), h('span', { class: 'muted small' }, `${t.count} gönderi`)))
+    );
+  } catch {
+    // Popüler konular yüklenemezse kart gizli kalır
+  }
+}
+
+/** Etiket sayfası: #etiket başlığı, toplam gönderi sayısı ve o etiketin geçtiği paylaşımlar */
+function showTag(tag) {
+  const tagName = `#${tag.replace(/^#/, '').toLocaleLowerCase('tr')}`;
+  const count = h('div', { class: 'muted small' });
+  main.replaceChildren(h('div', { class: 'card tag-header' }, h('h2', {}, tagName), count));
+  renderPostList(
+    main,
+    async (before) => {
+      const data = await api(`/posts/tag/${encodeURIComponent(tagName.slice(1))}${before ? `?before=${before}` : ''}`);
+      if (!before) count.textContent = `${data.count} gönderi`;
+      return data;
+    },
+    `${tagName} etiketiyle henüz paylaşım yok. İlk paylaşımı sen yap!`
+  );
+}
+
 /* ---------------- Paylaşım kartı ---------------- */
 
 const canModify = (ownerId) => ownerId === state.me.id || state.me.role !== 'member';
@@ -413,7 +448,7 @@ function postMenu(post, getEl) {
 function linkifyTags(text) {
   return text.split(/(#[\p{L}\p{N}_]{2,40}|(?<![\w.@])@[a-zA-Z0-9_.]{3,24})/u).flatMap((part, i) => {
     if (!(i % 2)) return part;
-    if (part.startsWith('#')) return h('a', { class: 'hashtag', href: searchHref(part, 'paylasimlar') }, part);
+    if (part.startsWith('#')) return h('a', { class: 'hashtag', href: tagHref(part) }, part);
     const name = part.slice(1).replace(/\.+$/, '');
     return [h('a', { class: 'mention', href: `#/u/${encodeURIComponent(name)}` }, '@' + name), part.slice(1 + name.length)];
   });
@@ -557,6 +592,7 @@ function composer(onPosted) {
     if (pollOn) pollBtn.click();
     paint();
     counter.textContent = '0 / 1000';
+    if (post.content?.includes('#')) renderTopics();
     onPosted(post);
   });
   return form;
@@ -808,7 +844,7 @@ function showExplore(params = new URLSearchParams()) {
   search.addEventListener('submit', (e) => {
     e.preventDefault();
     const q = search.q.value.trim();
-    if (q) location.hash = searchHref(q);
+    if (q) location.hash = /^#[\p{L}\p{N}_]{2,40}$/u.test(q) ? tagHref(q) : searchHref(q);
   });
   const tags = h('section', { class: 'card explore-tags hidden' });
   const tab = (key, label, href) => h('a', { href, class: sort === key ? 'active' : '' }, label);
@@ -823,8 +859,8 @@ function showExplore(params = new URLSearchParams()) {
     .then(({ tags: list }) => {
       if (!list.length) return;
       tags.replaceChildren(
-        h('h3', {}, 'Gündemdekiler'),
-        h('div', { class: 'tag-chips' }, ...list.map((t) => h('a', { class: 'tag-chip', href: searchHref(t.tag, 'paylasimlar') }, t.tag, h('span', {}, t.count))))
+        h('h3', {}, 'Popüler konular'),
+        h('div', { class: 'tag-chips' }, ...list.map((t) => h('a', { class: 'tag-chip', href: tagHref(t.tag) }, t.tag, h('span', {}, `${t.count} gönderi`))))
       );
       tags.classList.remove('hidden');
     })
@@ -860,6 +896,7 @@ function route() {
   const isSearch = path === '/ara';
   const isBookmarks = path === '/kaydedilenler';
   const isExplore = path === '/kesfet';
+  const tagMatch = path.match(/^\/etiket\/(.+)$/);
   const messagesMatch = path.match(/^\/mesajlar(?:\/(.+))?$/);
   const settingsMatch = path.match(/^\/ayarlar(?:\/(\w+))?$/);
   const active = userMatch
@@ -876,7 +913,7 @@ function route() {
             ? 'search'
             : isBookmarks
               ? 'bookmarks'
-              : isExplore
+              : isExplore || tagMatch
                 ? 'explore'
                 : 'feed';
   document.querySelectorAll('#bottom-nav a[data-route]').forEach((a) => a.classList.toggle('active', a.dataset.route === active));
@@ -886,6 +923,7 @@ function route() {
   if (userMatch) showUser(decodeURIComponent(userMatch[1]));
   else if (postMatch) showPost(postMatch[1]);
   else if (isBookmarks) showBookmarks();
+  else if (tagMatch) showTag(decodeURIComponent(tagMatch[1]));
   else if (isExplore) showExplore(new URLSearchParams(hash.split('?')[1] || ''));
   else if (isSearch) showSearch(ctx, new URLSearchParams(hash.split('?')[1] || ''));
   else if (messagesMatch) showMessages(ctx, messagesMatch[1] ? decodeURIComponent(messagesMatch[1]) : null);
@@ -913,6 +951,7 @@ state.stats = stats;
 renderProfileCard();
 renderUnread();
 renderSuggestions();
+renderTopics();
 document.getElementById('logout-btn').addEventListener('click', logout);
 
 // Tema değişince Görünüm sekmesi açıksa seçimi yenile (düğmeyi theme.js yönetir)

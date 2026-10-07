@@ -23,6 +23,7 @@ import {
   votePoll,
   getExplore,
   getTrendingTags,
+  countTag,
   getPoll,
   POLL_MIN_OPTIONS,
   POLL_MAX_OPTIONS,
@@ -123,6 +124,15 @@ router.get('/explore', (req, res) => {
   const page = Math.max(0, Math.min(50, Number.parseInt(req.query.page, 10) || 0));
   const data = getExplore({ viewerId: req.user.id, viewerIsAdmin: req.user.role === 'admin', page });
   res.json(page === 0 ? { ...data, tags: getTrendingTags({ viewerId: req.user.id }) } : data);
+});
+
+/** Etiket sayfası: #etiketin geçtiği paylaşımlar (?before=) ve ilk sayfada toplam sayı. */
+router.get('/tag/:tag', (req, res) => {
+  const tag = String(req.params.tag || '').replace(/^#/, '').toLocaleLowerCase('tr');
+  if (!/^[\p{L}\p{N}_]{2,40}$/u.test(tag)) throw v.bad('Geçersiz etiket.');
+  const before = req.query.before ? v.id(req.query.before) : null;
+  const data = getFeed({ viewerId: req.user.id, viewerIsAdmin: req.user.role === 'admin', before, tag });
+  res.json(before ? data : { ...data, tag: `#${tag}`, count: countTag(tag, req.user.id) });
 });
 
 /** Kaydedilen paylaşımlar. */

@@ -4,7 +4,7 @@ import express from 'express';
 import session from 'express-session';
 import { config } from './config.js';
 import './db.js';
-import { cleanupPendingImages } from './models/posts.js';
+import { backfillTags, cleanupPendingImages } from './models/posts.js';
 import { cleanupLogs } from './models/audit.js';
 import { SqliteSessionStore } from './sessionStore.js';
 import { loadUser } from './middleware/auth.js';
@@ -148,6 +148,13 @@ app.use((err, _req, res, _next) => {
   console.error(err);
   res.status(500).json({ error: 'Sunucu hatası.' });
 });
+
+// Etiket tablosundan önceki paylaşımların etiketleri (bir kez)
+try {
+  backfillTags();
+} catch (err) {
+  console.warn('Etiketler doldurulamadı:', err.message);
+}
 
 // Paylaşılmadan bırakılan fotoğrafları temizle (açılışta ve saatte bir)
 // ve 180 günden eski olay kayıtlarını sil

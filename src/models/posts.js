@@ -22,6 +22,22 @@ export const authorOf = (row, prefix = '') => ({
   role: row.author_role === 'admin' ? 'admin' : row.author_mod ? 'moderator' : 'member',
 });
 
+/** Metindeki #etiketler (küçük harfe çevrilmiş, # olmadan, tekrarsız). */
+export const extractTags = (text) =>
+  [...new Set([...String(text || '').matchAll(/#([\p{L}\p{N}_]{2,40})/gu)].map((m) => m[1].toLocaleLowerCase('tr')))];
+
+function saveTags(postId, content) {
+  const add = db.prepare('INSERT OR IGNORE INTO post_tags (post_id, tag) VALUES (?, ?)');
+  for (const tag of extractTags(content)) add.run(postId, tag);
+}
+
+/** Etiket tablosu sonradan eklendi: eski paylaşımların etiketlerini bir kez doldurur. */
+export function backfillTags() {
+  if (db.prepare('SELECT 1 FROM post_tags LIMIT 1').get()) return;
+  const rows = db.prepare("SELECT id, content FROM posts WHERE content LIKE '%#%'").all();
+  for (const r of rows) saveTags(r.id, r.content);
+}
+
 export const POLL_MIN_OPTIONS = 2;
 export const POLL_MAX_OPTIONS = 4;
 
@@ -41,6 +57,7 @@ export function createPost(userId, content, imageIds = [], { quoteOf = null, pol
   }
   const attach = db.prepare('UPDATE post_images SET post_id = ?, position = ? WHERE id = ? AND user_id = ? AND post_id IS NULL');
   imageIds.forEach((id, i) => attach.run(postId, i, id, userId));
+  saveTags(postId, content);
   return postId;
 }
 
@@ -97,6 +114,7 @@ export function findPost(id) {
 export function deletePost(id) {
   db.prepare("DELETE FROM notifications WHERE json_extract(data, '$.postId') = ?").run(id);
   for (const r of db.prepare('SELECT url FROM post_images WHERE post_id = ?').all(id)) removeUpload(r.url);
+  db.prepare('DELETE FROM post_tags WHERE post_id = ?').run(id);
   db.prepare('DELETE FROM posts WHERE id = ?').run(id);
 }
 
@@ -106,7 +124,7 @@ export function deletePost(id) {
  * `following: true` ise yalnızca izleyenin (onaylı) takip ettikleri ve kendi paylaşımları döner.
  * Gizli hesapların paylaşımları yalnızca onaylı takipçilere görünür (`viewerIsAdmin` hepsini görür).
  */
-export function getFeed({ viewerId, viewerIsAdmin = false, before = null, limit = 20, userId = null, following = false, search = null, bookmarkedBy = null }) {
+export function getFeed({ viewerId, viewerIsAdmin = false, before = null, limit = 20, userId = null, following = false, search = null, bookmarkedBy = null, tag = null }) {
   const pattern = search ? `%${likeEscape(search)}%` : null;
   const followingOf = following ? viewerId : null;
   const visibility = viewerIsAdmin ? '1' : VISIBLE_AUTHOR_SQL;
@@ -123,12 +141,13 @@ export function getFeed({ viewerId, viewerIsAdmin = false, before = null, limit 
          AND u.status = 'active'
          AND (? IS NULL OR p.content LIKE ? ESCAPE '\\')
          AND (? IS NULL OR p.id IN (SELECT post_id FROM bookmarks WHERE user_id = ?))
+         AND (? IS NULL OR p.id IN (SELECT post_id FROM post_tags WHERE tag = ?))
          AND ${notBlockedSql('p.user_id')}
          AND ${visibility}
        ORDER BY p.id DESC
        LIMIT ?`
     )
-    .all(before, before, userId, userId, followingOf, followingOf, followingOf, pattern, pattern, bookmarkedBy, bookmarkedBy, viewerId, viewerId, ...visibilityArgs, limit + 1);
+    .all(before, before, userId, userId, followingOf, followingOf, followingOf, pattern, pattern, bookmarkedBy, bookmarkedBy, tag, tag, viewerId, viewerId, ...visibilityArgs, limit + 1);
 
   const hasMore = rows.length > limit;
   const posts = rows.slice(0, limit).map((r) => hydratePost(r, viewerId));
@@ -281,20 +300,27 @@ export function getExplore({ viewerId, viewerIsAdmin = false, page = 0, limit = 
   return { posts: rows.slice(0, limit).map((r) => hydratePost(r, viewerId)), hasMore: rows.length > limit };
 }
 
-/** Son 7 günde en çok kullanılan #etiketler. */
-export function getTrendingTags({ viewerId, limit = 12 }) {
-  const rows = db
+/** Popüler konular: son 30 günde en çok paylaşımda geçen #etiketler ve paylaşım sayıları. */
+export function getTrendingTags({ viewerId, limit = 10 }) {
+  return db
     .prepare(
-      `SELECT p.content FROM posts p JOIN users u ON u.id = p.user_id
-       WHERE p.created_at > datetime('now', '-7 days') AND p.content LIKE '%#%' AND u.status = 'active'
+      `SELECT t.tag, COUNT(*) AS n FROM post_tags t
+       JOIN posts p ON p.id = t.post_id JOIN users u ON u.id = p.user_id
+       WHERE p.created_at > datetime('now', '-30 days') AND u.status = 'active'
          AND ${notBlockedSql('p.user_id')} AND ${VISIBLE_AUTHOR_SQL}
-       ORDER BY p.id DESC LIMIT 1000`
+       GROUP BY t.tag ORDER BY n DESC, MAX(p.id) DESC LIMIT ?`
     )
-    .all(viewerId, viewerId, viewerId, viewerId);
-  const counts = new Map();
-  for (const { content } of rows) {
-    const tags = new Set([...content.matchAll(/#([\p{L}\p{N}_]{2,40})/gu)].map((m) => m[1].toLocaleLowerCase('tr')));
-    for (const t of tags) counts.set(t, (counts.get(t) || 0) + 1);
-  }
-  return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit).map(([tag, count]) => ({ tag: `#${tag}`, count }));
+    .all(viewerId, viewerId, viewerId, viewerId, limit)
+    .map((r) => ({ tag: `#${r.tag}`, count: r.n }));
+}
+
+/** Bir etiketin izleyenin görebildiği toplam paylaşım sayısı. */
+export function countTag(tag, viewerId) {
+  return db
+    .prepare(
+      `SELECT COUNT(*) AS n FROM post_tags t
+       JOIN posts p ON p.id = t.post_id JOIN users u ON u.id = p.user_id
+       WHERE t.tag = ? AND u.status = 'active' AND ${notBlockedSql('p.user_id')} AND ${VISIBLE_AUTHOR_SQL}`
+    )
+    .get(tag, viewerId, viewerId, viewerId, viewerId).n;
 }
