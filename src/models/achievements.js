@@ -30,23 +30,25 @@ export const ACHIEVEMENTS = [
   { key: 'days_365', stat: 'days', goal: 365, icon: '🎂', title: 'Kıdemli', desc: '1 yıldır üyesin' },
 ];
 
-/** Bütün sayaçlar tek sorguda (uzak veritabanında tek gidiş-dönüş). */
+/** Bütün sayaçlar tek sorguda (uzak veritabanında tek gidiş-dönüş). Turso adlı parametreleri desteklemediği için ? kullanılır. */
+const PARAMS = 11;
+
 function getStats(userId) {
   const r = db
     .prepare(
       `SELECT
-         (SELECT COUNT(*) FROM posts WHERE user_id = :id) AS posts,
-         (SELECT COUNT(*) FROM messages WHERE sender_id = :id) AS messages,
-         (SELECT COUNT(*) FROM follows WHERE follower_id = :id AND status = 'accepted') AS following,
-         (SELECT COUNT(*) FROM follows WHERE following_id = :id AND status = 'accepted') AS followers,
-         (SELECT COUNT(*) FROM comments WHERE user_id = :id) AS comments,
-         (SELECT COUNT(*) FROM reactions r JOIN posts p ON p.id = r.post_id WHERE p.user_id = :id AND r.user_id <> :id) AS reactions,
-         (SELECT COUNT(*) FROM stories WHERE user_id = :id) AS stories,
-         (SELECT COUNT(*) FROM posts WHERE user_id = :id AND has_poll = 1) AS polls,
-         (SELECT COUNT(DISTINCT t.tag) FROM post_tags t JOIN posts p ON p.id = t.post_id WHERE p.user_id = :id) AS tags,
-         (SELECT CAST(julianday('now') - julianday(created_at) AS INTEGER) FROM users WHERE id = :id) AS days`
+         (SELECT COUNT(*) FROM posts WHERE user_id = ?) AS posts,
+         (SELECT COUNT(*) FROM messages WHERE sender_id = ?) AS messages,
+         (SELECT COUNT(*) FROM follows WHERE follower_id = ? AND status = 'accepted') AS following,
+         (SELECT COUNT(*) FROM follows WHERE following_id = ? AND status = 'accepted') AS followers,
+         (SELECT COUNT(*) FROM comments WHERE user_id = ?) AS comments,
+         (SELECT COUNT(*) FROM reactions r JOIN posts p ON p.id = r.post_id WHERE p.user_id = ? AND r.user_id <> ?) AS reactions,
+         (SELECT COUNT(*) FROM stories WHERE user_id = ?) AS stories,
+         (SELECT COUNT(*) FROM posts WHERE user_id = ? AND has_poll = 1) AS polls,
+         (SELECT COUNT(DISTINCT t.tag) FROM post_tags t JOIN posts p ON p.id = t.post_id WHERE p.user_id = ?) AS tags,
+         (SELECT CAST(julianday('now') - julianday(created_at) AS INTEGER) FROM users WHERE id = ?) AS days`
     )
-    .get({ id: userId });
+    .get(...Array(PARAMS).fill(userId));
   return r || {};
 }
 
