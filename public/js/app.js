@@ -1013,6 +1013,13 @@ renderProfileCard();
 renderUnread();
 renderSuggestions();
 renderTopics();
+
+// Geniş ekranda önerilen kişiler sağ sütunda Popüler konuların altında, daha darda sol sütunda
+const wideScreen = window.matchMedia('(min-width: 1240px)');
+const placeSuggestions = () =>
+  (wideScreen.matches ? document.getElementById('rightbar') : document.getElementById('sidebar')).append(document.getElementById('suggestions'));
+placeSuggestions();
+wideScreen.addEventListener('change', placeSuggestions);
 document.getElementById('logout-btn').addEventListener('click', logout);
 
 // Tema değişince Görünüm sekmesi açıksa seçimi yenile (düğmeyi theme.js yönetir)

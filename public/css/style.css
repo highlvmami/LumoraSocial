@@ -756,16 +756,17 @@ body.story-open { overflow: hidden; }
 .suggest-strip { display: none; }
 .top-bell { position: relative; color: var(--text); padding: 6px; border-radius: 10px; }
 .top-bell .count-badge, .bottom-nav .count-badge { position: absolute; top: 0; right: 0; transform: translate(30%, -20%); }
-.suggest-strip { padding: 14px 0 14px 16px; }
-.suggest-strip h3 { margin: 0 0 10px; font-size: 15px; }
-.suggest-row { display: flex; gap: 10px; overflow-x: auto; padding-right: 16px; scrollbar-width: none; }
+.suggest-strip { padding: 12px 0 12px 14px; }
+.suggest-strip h3 { margin: 0 0 8px; font-size: 14px; }
+.suggest-row { display: flex; gap: 8px; overflow-x: auto; padding-right: 16px; scrollbar-width: none; }
 .suggest-row::-webkit-scrollbar { display: none; }
-.suggest-card { flex: 0 0 136px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 10px; border: 1px solid var(--border); border-radius: 12px; text-align: center; }
+.suggest-card { flex: 0 0 92px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 8px; border: 1px solid var(--border); border-radius: 12px; text-align: center; }
 .suggest-card a { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text); min-width: 0; max-width: 100%; }
 .suggest-card a:hover { text-decoration: none; }
-.suggest-card .avatar.lg { width: 64px; height: 64px; font-size: 22px; margin: 0; }
-.suggest-card b, .suggest-card .muted { max-width: 116px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.suggest-card .btn { width: 100%; }
+.suggest-card .avatar.lg { width: 40px; height: 40px; font-size: 15px; margin: 0; }
+.suggest-card .muted { display: none; }
+.suggest-card b, .suggest-card .muted { font-size: 12px; max-width: 76px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.suggest-card .btn { width: 100%; padding: 4px 8px; font-size: 12px; }
 .explore-search { padding: 8px; }
 .explore-search input { border-radius: 999px; padding: 10px 16px; background: var(--surface-2); border-color: transparent; }
 .create-sheet { position: fixed; left: 0; right: 0; bottom: 0; border-radius: 18px 18px 0 0; padding: 8px 16px calc(20px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 8px; max-width: 520px; margin: 0 auto; }

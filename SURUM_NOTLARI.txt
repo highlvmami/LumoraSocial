@@ -88,3 +88,4 @@
      - Başarım sistemi: paylaşım, mesaj, takip, takipçi, yorum, aldığın tepkiler, hikaye, anket, etiket ve üyelik süresine göre 21 başarım. Kazanınca bildirim geliyor; profilde rozetler, menüde "Başarımlar" sayfasında ilerleme çubukları
      - Menüdeki her bölümün sağında simge; Başarımlar'da altın kupa
      - Bilgisayar menüsünden "Ara" kaldırıldı (üstte arama kutusu var)
+     - Önerilen kişiler bilgisayarda Popüler konuların altında; telefonda kartlar küçültüldü
