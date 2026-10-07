@@ -1079,6 +1079,8 @@ const placeSuggestions = () =>
 placeSuggestions();
 wideScreen.addEventListener('change', placeSuggestions);
 document.getElementById('logout-btn').addEventListener('click', logout);
+// Uygulamanın içindeyken (ana ekrana eklenmiş ya da Android uygulaması) "Uygulamayı indir" gizlenir
+if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true || document.referrer.startsWith('android-app://')) document.getElementById('nav-download').remove();
 
 // Tema değişince Görünüm sekmesi açıksa seçimi yenile (düğmeyi theme.js yönetir)
 document.addEventListener('lumora:theme', () => location.hash.startsWith('#/ayarlar/gorunum') && route());
