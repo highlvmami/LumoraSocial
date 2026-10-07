@@ -31,6 +31,8 @@ const RULES = [
   { part: ['fuck', 'motherf', 'nigger', 'nigga', 'faggot', 'bitch', 'asshole', 'whore', 'pussy', 'dickhead', 'porn'] },
   { exact: ['fck', 'fcking', 'stfu', 'dick', 'dicks', 'cock', 'cocks', 'fag', 'fags', 'slut', 'sluts', 'bastard', 'bastards', 'retard', 'retarded', 'twat', 'cunt', 'cunts', 'wanker', 'shit', 'shits', 'shitty', 'bullshit', 'nudes'] },
   { prefix: ['shithead', 'shitfac'] },
+  // Cinsel içerik
+  { exact: ['sex', 'sexy', 'sexi', 'seks', 'seksi', 'xxx', 'penis', 'vajina', 'vagina', 'escort', 'eskort'], prefix: ['sexting', 'sextape', 'seksting', 'onlyfans', 'hentai', 'pornhub', 'xvideos', 'xhamster', 'brazzers'] },
 ];
 
 /** Harfleri sadeleştir; tekrar eden harfleri tek harfe indir. keepDotless: ı korunur. */

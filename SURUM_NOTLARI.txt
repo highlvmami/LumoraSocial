@@ -81,5 +81,5 @@
      - Gönderilerde "... önce" yazısı gönderinin sol altına taşındı
      - "Yeniden paylaş" yazısı yerine dönen ok simgesi; ayrıca gönderinin ⋯ menüsünde de var
      - Yeniden paylaş düğmesi gönderinin altında eski yerinde, yazı yerine siyah-beyaz dönen ok simgesiyle (⋯ menüsünden kaldırıldı)
-     - Otomatik yazı denetimi: paylaşım, yorum, anket, hikaye ve hikaye yanıtı, mesaj, kullanıcı adı, isim ve tüm profil bilgilerinde Türkçe/İngilizce küfür ve hakaretler reddediliyor (s.i.k, 4mk, f*ck gibi kaçamak yazımlar dahil)
+     - Otomatik yazı denetimi: paylaşım, yorum, anket, hikaye ve hikaye yanıtı, mesaj, kullanıcı adı, isim ve tüm profil bilgilerinde Türkçe/İngilizce küfür, hakaret ve cinsel içerikli sözcükler (sex, seks, porno vb.) reddediliyor (s.i.k, 4mk, f*ck gibi kaçamak yazımlar dahil)
      - Otomatik fotoğraf denetimi: paylaşım, hikaye, mesaj, profil ve kapak fotoğraflarında çıplaklık/cinsel içerik reddediliyor (Sightengine anahtarları girilince devreye girer)
