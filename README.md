@@ -144,3 +144,14 @@ SURUM_NOTLARI.txt    Sürüm notları
 - **Başarımlar:** `src/models/achievements.js` içindeki `ACHIEVEMENTS` listesine satır ekleyin.
 - **Yasaklı sözcükler:** `src/services/moderation.js` içindeki `RULES` listesini düzenleyin.
 - **Emoji tepkileri:** `src/models/posts.js` içindeki `REACTIONS` listesi.
+
+## Geri bildirim ve öneriler
+
+Her türlü öneri, hata bildirimi ve fikir memnuniyetle karşılanır.
+
+- **Sitenin içinden:** giriş yaptıktan sonra menüdeki **Geri bildirim** sayfasından öneri, hata bildirimi ya da diğer başlıklarıyla yazabilirsin. Mesajın doğrudan yöneticiye ulaşır, tamamlandığında bildirim gelir.
+- **GitHub:** hata ve öneriler için [Issues](https://github.com/highlvmami/LumoraSocial/issues) bölümünde konu açabilirsin.
+- **Katkı:** pull request'ler açıktır. Büyük bir değişiklik düşünüyorsan önce bir issue açıp konuşalım.
+- **E-posta:** lumorasocial.destek@gmail.com
+
+Projeyi beğendiysen bir ⭐ bırakmayı unutma!

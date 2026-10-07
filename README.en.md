@@ -146,3 +146,14 @@ SURUM_NOTLARI.txt    Release notes (Turkish)
 - **Achievements:** add a row to `ACHIEVEMENTS` in `src/models/achievements.js`.
 - **Blocked words:** edit the `RULES` list in `src/services/moderation.js`.
 - **Emoji reactions:** the `REACTIONS` list in `src/models/posts.js`.
+
+## Feedback and suggestions
+
+Suggestions, bug reports and ideas of any kind are very welcome.
+
+- **On the site:** after signing in, use the **Geri bildirim** (Feedback) page in the menu to send a suggestion, bug report or other note. It goes straight to the admin, and you get a notification when it is done.
+- **GitHub:** open an issue in [Issues](https://github.com/highlvmami/LumoraSocial/issues) for bugs and suggestions.
+- **Contributing:** pull requests are welcome. For bigger changes, please open an issue first so we can discuss it.
+- **Email:** lumorasocial.destek@gmail.com
+
+If you like the project, leave a ⭐!
