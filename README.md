@@ -25,6 +25,25 @@ Arkadaşlar ve topluluklar için bir sosyal medya sitesi. Üyeler yazı, fotoğr
 
 > Demo Render'ın ücretsiz planında çalışıyor. Yaklaşık 15 dakika ziyaretçi gelmezse uykuya geçer; sonraki ilk açılış bir dakikaya kadar sürebilir.
 
+## Ekran görüntüleri
+
+<p align="center">
+  <img src="docs/screenshots/akis.jpg" alt="Akış" width="100%">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/profil.jpg" alt="Profil ve başarım rozetleri" width="49%">
+  <img src="docs/screenshots/basarimlar.jpg" alt="Başarımlar sayfası" width="49%">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/mobil-kesfet.jpg" alt="Keşfet ve Popüler konular" width="30%">
+  <img src="docs/screenshots/mobil-etiket.jpg" alt="#fakulte etiket sayfası" width="30%">
+  <img src="docs/screenshots/mobil-mesaj.jpg" alt="Mesajlaşma (koyu tema)" width="30%">
+</p>
+
+<p align="center"><sub>Akış · Profil ve başarım rozetleri · Başarımlar · Telefonda Keşfet, #etiket sayfası ve mesajlaşma (koyu tema). Görüntüler örnek verilerle çekildi.</sub></p>
+
 ## Özellikler
 
 ### Paylaşım ve akış

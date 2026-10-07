@@ -27,6 +27,25 @@ A social network for friends and communities. Members share text, photos and pol
 
 The interface is in Turkish.
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/akis.jpg" alt="Feed" width="100%">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/profil.jpg" alt="Profile with achievement badges" width="49%">
+  <img src="docs/screenshots/basarimlar.jpg" alt="Achievements page" width="49%">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/mobil-kesfet.jpg" alt="Explore and popular topics" width="30%">
+  <img src="docs/screenshots/mobil-etiket.jpg" alt="#fakulte hashtag page" width="30%">
+  <img src="docs/screenshots/mobil-mesaj.jpg" alt="Messaging (dark theme)" width="30%">
+</p>
+
+<p align="center"><sub>Feed · Profile with achievement badges · Achievements · On the phone: Explore, a hashtag page and messaging (dark theme). Captured with sample data.</sub></p>
+
 ## Features
 
 ### Posts and feed
