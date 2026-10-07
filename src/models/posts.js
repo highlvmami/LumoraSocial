@@ -121,7 +121,8 @@ export function deletePost(id) {
 /**
  * Akış: en yeni paylaşımlar önce. `before` ile sayfalama yapılır.
  * `userId` verilirse yalnızca o kullanıcının paylaşımları döner.
- * `following: true` ise yalnızca izleyenin (onaylı) takip ettikleri ve kendi paylaşımları döner.
+ * `following: true` ise izleyenin (onaylı) takip ettikleri, kendi paylaşımları ve yöneticilerin paylaşımları döner
+ * (yeni üyelerin akışı boş kalmasın diye).
  * Gizli hesapların paylaşımları yalnızca onaylı takipçilere görünür (`viewerIsAdmin` hepsini görür).
  */
 export function getFeed({ viewerId, viewerIsAdmin = false, before = null, limit = 20, userId = null, following = false, search = null, bookmarkedBy = null, tag = null }) {
@@ -137,7 +138,7 @@ export function getFeed({ viewerId, viewerIsAdmin = false, before = null, limit 
        FROM posts p JOIN users u ON u.id = p.user_id
        WHERE (? IS NULL OR p.id < ?)
          AND (? IS NULL OR p.user_id = ?)
-         AND (? IS NULL OR p.user_id = ? OR p.user_id IN (SELECT following_id FROM follows WHERE follower_id = ? AND status = 'accepted'))
+         AND (? IS NULL OR p.user_id = ? OR u.role = 'admin' OR p.user_id IN (SELECT following_id FROM follows WHERE follower_id = ? AND status = 'accepted'))
          AND u.status = 'active'
          AND (? IS NULL OR p.content LIKE ? ESCAPE '\\')
          AND (? IS NULL OR p.id IN (SELECT post_id FROM bookmarks WHERE user_id = ?))

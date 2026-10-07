@@ -89,3 +89,4 @@
      - Menüdeki her bölümün sağında simge; Başarımlar'da altın kupa
      - Bilgisayar menüsünden "Ara" kaldırıldı (üstte arama kutusu var)
      - Önerilen kişiler bilgisayarda Popüler konuların altında; telefonda kartlar küçültüldü
+     - Yöneticinin paylaşımları herkesin akışında görünüyor; yeni üyelerin akışı boş kalmıyor
