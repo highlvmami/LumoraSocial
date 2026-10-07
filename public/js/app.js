@@ -39,6 +39,7 @@ function renderProfileCard() {
 function renderUnread() {
   for (const [id, n] of [['unread-count', state.unread], ['unread-messages', state.unreadMessages], ['unread-bell', state.unread], ['unread-messages-bottom', state.unreadMessages]]) {
     const el = document.getElementById(id);
+    if (!el) continue;
     el.textContent = n > 99 ? '99+' : n;
     el.classList.toggle('hidden', !n);
   }

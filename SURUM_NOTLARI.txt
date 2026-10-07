@@ -90,3 +90,4 @@
      - Bilgisayar menüsünden "Ara" kaldırıldı (üstte arama kutusu var)
      - Önerilen kişiler bilgisayarda Popüler konuların altında; telefonda kartlar küçültüldü
      - Yöneticinin paylaşımları herkesin akışında görünüyor; yeni üyelerin akışı boş kalmıyor
+     - Menü sırası: Akış, Profilim, Mesajlar, Kaydedilenler, Başarımlar, Ayarlar, Yönetim paneli (yalnızca yöneticiye), Çıkış yap. Bildirimler menüden kalktı; bilgisayarda da üstte zil simgesi var

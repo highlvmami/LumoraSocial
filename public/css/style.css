@@ -482,7 +482,7 @@ td .actions { display: flex; gap: 6px; flex-wrap: wrap; }
 /* ================= Arama ================= */
 .topbar { position: sticky; top: 0; z-index: 20; background: var(--surface); border-bottom: 1px solid var(--border); }
 .topbar-inner { max-width: 956px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.top-search { flex: 0 1 300px; }
+.top-search { flex: 0 1 300px; margin-left: auto; }
 .top-search input { border-radius: 999px; padding: 8px 16px; background: var(--surface-2); border-color: transparent; }
 .top-search input:focus { background: var(--surface); }
 .search-box { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 14px; }
@@ -752,7 +752,8 @@ body.story-open { overflow: hidden; }
 .sheet-empty { color: var(--muted); margin: 8px 0; }
 
 /* ================= Mobil: alt menü, üst bildirim zili, + paneli ================= */
-.bottom-nav, .top-bell { display: none; }
+.bottom-nav { display: none; }
+.top-bell { display: inline-flex; margin-left: 4px; }
 .suggest-strip { display: none; }
 .top-bell { position: relative; color: var(--text); padding: 6px; border-radius: 10px; }
 .top-bell .count-badge, .bottom-nav .count-badge { position: absolute; top: 0; right: 0; transform: translate(30%, -20%); }
