@@ -1,3 +1,5 @@
+import { isOffensive } from './services/moderation.js';
+
 export class HttpError extends Error {
   constructor(status, message) {
     super(message);
@@ -18,6 +20,7 @@ export function str(value, { field, min = 0, max, trim = true }) {
 export function username(value) {
   const u = str(value, { field: 'Kullanıcı adı', min: 3, max: 24 });
   if (!/^[a-zA-Z0-9_.]+$/.test(u)) throw bad('Kullanıcı adı yalnızca harf, rakam, nokta ve alt çizgi içerebilir.');
+  clean(u, 'Kullanıcı adı');
   return u;
 }
 
@@ -26,7 +29,7 @@ export function password(value) {
 }
 
 export function displayName(value) {
-  return str(value, { field: 'İsim', min: 1, max: 50 });
+  return clean(str(value, { field: 'İsim', min: 1, max: 50 }), 'İsim');
 }
 
 /** Şifre + şifre tekrarı: ikisi eşleşmeli. */
@@ -92,4 +95,10 @@ export function id(value) {
   const n = Number(value);
   if (!Number.isInteger(n) || n <= 0) throw bad('Geçersiz kimlik.');
   return n;
+}
+
+/** Otomatik denetim: küfür/hakaret içeren metin reddedilir. */
+export function clean(value, field = 'Metin') {
+  if (isOffensive(value)) throw bad(`${field} uygunsuz bir ifade içeriyor. Lütfen düzenleyip tekrar dene.`);
+  return value;
 }

@@ -58,19 +58,19 @@ router.patch('/me', (req, res) => {
   const b = req.body;
   const changes = {};
   if (b.displayName !== undefined) changes.displayName = v.displayName(b.displayName);
-  if (b.bio !== undefined) changes.bio = v.str(b.bio, { field: 'Biyografi', max: 300 });
+  if (b.bio !== undefined) changes.bio = v.clean(v.str(b.bio, { field: 'Biyografi', max: 300 }), 'Biyografi');
   if (b.avatarColor !== undefined) {
     if (!AVATAR_COLORS.includes(b.avatarColor)) throw v.bad('Geçersiz renk.');
     changes.avatarColor = b.avatarColor;
   }
   if (b.birthDate !== undefined) changes.birthDate = v.date(b.birthDate ?? '', 'Doğum tarihi');
-  if (b.location !== undefined) changes.location = v.str(b.location, { field: 'Konum', max: 60 });
+  if (b.location !== undefined) changes.location = v.clean(v.str(b.location, { field: 'Konum', max: 60 }), 'Konum');
   if (b.website !== undefined) changes.website = v.url(b.website);
-  if (b.occupation !== undefined) changes.occupation = v.str(b.occupation, { field: 'Meslek', max: 60 });
-  if (b.education !== undefined) changes.education = v.str(b.education, { field: 'Eğitim', max: 100 });
+  if (b.occupation !== undefined) changes.occupation = v.clean(v.str(b.occupation, { field: 'Meslek', max: 60 }), 'Meslek');
+  if (b.education !== undefined) changes.education = v.clean(v.str(b.education, { field: 'Eğitim', max: 100 }), 'Eğitim');
   if (b.interests !== undefined) {
     if (!Array.isArray(b.interests)) throw v.bad('İlgi alanları geçersiz.');
-    const list = [...new Set(b.interests.map((i) => v.str(i, { field: 'İlgi alanı', max: 30 })).filter(Boolean))];
+    const list = [...new Set(b.interests.map((i) => v.clean(v.str(i, { field: 'İlgi alanı', max: 30 }), 'İlgi alanı')).filter(Boolean))];
     if (list.length > 15) throw v.bad('En fazla 15 ilgi alanı ekleyebilirsin.');
     changes.interests = list;
   }

@@ -87,7 +87,7 @@ router.post('/', (req, res) => {
   const quoted = req.body.quoteOf ? requirePost(v.id(req.body.quoteOf), req.user) : null;
   const poll = parsePoll(req.body.poll);
   if (poll && (quoted || imageIds.length)) throw v.bad('Anket, fotoğraflı veya yeniden paylaşılan gönderiye eklenemez.');
-  const content = v.str(req.body.content, { field: 'Paylaşım', min: imageIds.length || quoted ? 0 : 1, max: 1000 });
+  const content = v.clean(v.str(req.body.content, { field: 'Paylaşım', min: imageIds.length || quoted ? 0 : 1, max: 1000 }), 'Paylaşım');
   const id = createPost(req.user.id, content, imageIds, { quoteOf: quoted?.id ?? null, poll });
   if (quoted && quoted.user_id !== req.user.id) {
     notify(quoted.user_id, 'post_repost', { actorId: req.user.id, data: { postId: id, preview: preview(quoted.content), text: preview(content, 120) } });
@@ -99,7 +99,7 @@ router.post('/', (req, res) => {
 
 function parsePoll(raw) {
   if (!raw) return null;
-  const options = (Array.isArray(raw.options) ? raw.options : []).map((o) => v.str(o, { field: 'Anket seçeneği', max: 80 })).filter(Boolean);
+  const options = (Array.isArray(raw.options) ? raw.options : []).map((o) => v.clean(v.str(o, { field: 'Anket seçeneği', max: 80 }), 'Anket seçeneği')).filter(Boolean);
   if (options.length < POLL_MIN_OPTIONS || options.length > POLL_MAX_OPTIONS) throw v.bad(`Ankette ${POLL_MIN_OPTIONS}-${POLL_MAX_OPTIONS} seçenek olmalı.`);
   if (new Set(options.map((o) => o.toLocaleLowerCase('tr'))).size !== options.length) throw v.bad('Anket seçenekleri birbirinden farklı olmalı.');
   const hours = v.oneOf(Number(raw.hours) || 24, [1, 6, 24, 72, 168], 'Anket süresi');
@@ -166,7 +166,7 @@ router.post('/:id/reactions', (req, res) => {
 
 router.post('/:id/comments', (req, res) => {
   const post = requirePost(v.id(req.params.id), req.user);
-  const content = v.str(req.body.content, { field: 'Yorum', min: 1, max: 500 });
+  const content = v.clean(v.str(req.body.content, { field: 'Yorum', min: 1, max: 500 }), 'Yorum');
   const commentId = addComment(post.id, req.user.id, content);
   if (post.user_id !== req.user.id) {
     notify(post.user_id, 'post_comment', {

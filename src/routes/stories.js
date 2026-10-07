@@ -75,7 +75,7 @@ const ownStoryFromBody = (req) => {
 /** Yeni öne çıkan (ilk hikayesiyle birlikte). */
 router.post('/highlights', (req, res) => {
   const story = ownStoryFromBody(req);
-  const title = v.str(req.body.title, { field: 'Başlık', min: 1, max: 30 });
+  const title = v.clean(v.str(req.body.title, { field: 'Başlık', min: 1, max: 30 }), 'Başlık');
   if (countHighlights(req.user.id) >= MAX_HIGHLIGHTS) throw v.bad(`En fazla ${MAX_HIGHLIGHTS} öne çıkan oluşturabilirsin.`);
   const id = createHighlight(req.user.id, title);
   addToHighlight(id, story.id);
@@ -103,7 +103,7 @@ router.delete('/highlights/:id', (req, res) => {
 /** Yazılı hikaye */
 router.post('/', (req, res) => {
   checkLimit(req.user.id);
-  const text = v.str(req.body.text, { field: 'Hikaye metni', min: 1, max: STORY_TEXT_MAX });
+  const text = v.clean(v.str(req.body.text, { field: 'Hikaye metni', min: 1, max: STORY_TEXT_MAX }), 'Hikaye metni');
   const bg = v.oneOf(req.body.bg || STORY_BACKGROUNDS[0], STORY_BACKGROUNDS, 'Arka plan rengi');
   const id = createStory(req.user.id, { text, bg });
   res.status(201).json({ id });
