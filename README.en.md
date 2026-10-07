@@ -166,6 +166,20 @@ SURUM_NOTLARI.txt    Release notes (Turkish)
 - **Blocked words:** edit the `RULES` list in `src/services/moderation.js`.
 - **Emoji reactions:** the `REACTIONS` list in `src/models/posts.js`.
 
+## Roadmap
+
+What is coming next. If you have an idea, use one of the feedback channels below.
+
+- [ ] **Mini games:** short turn-based games to play with friends (tic-tac-toe, word guessing, quizzes) with a leaderboard
+- [ ] **Short videos:** a vertical, swipeable feed of random and popular videos
+- [ ] **Groups and communities:** groups for a school, department or hobby, each with its own feed
+- [ ] **Group chats:** messaging with several people at once
+- [ ] **Voice messages:** short audio recordings in chats
+- [ ] **Events:** create events, an "I'm going" list and reminder notifications
+- [ ] **Editing posts:** fix a post after publishing it
+- [ ] **English interface:** choose Turkish or English for the site
+- [ ] **iOS app**
+
 ## Feedback and suggestions
 
 Suggestions, bug reports and ideas of any kind are very welcome.

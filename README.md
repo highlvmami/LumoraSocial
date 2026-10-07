@@ -164,6 +164,20 @@ SURUM_NOTLARI.txt    Sürüm notları
 - **Yasaklı sözcükler:** `src/services/moderation.js` içindeki `RULES` listesini düzenleyin.
 - **Emoji tepkileri:** `src/models/posts.js` içindeki `REACTIONS` listesi.
 
+## Yol haritası (eklenecekler)
+
+Sıradaki özellikler. Fikrin varsa aşağıdaki geri bildirim kanallarından yazabilirsin.
+
+- [ ] **Mini oyunlar:** arkadaşlarla sırayla oynanan kısa oyunlar (XOX, kelime tahmini, bilgi yarışması) ve skor tablosu
+- [ ] **Kısa videolar:** kaydırarak izlenen, rastgele ve popüler videoların aktığı dikey video akışı
+- [ ] **Gruplar ve topluluklar:** okul, bölüm ya da hobiye göre kendi akışı olan gruplar
+- [ ] **Grup sohbetleri:** birden fazla kişiyle mesajlaşma
+- [ ] **Sesli mesaj:** mesajlarda kısa ses kaydı gönderme
+- [ ] **Etkinlikler:** etkinlik oluşturma, "Katılıyorum" listesi ve hatırlatma bildirimi
+- [ ] **Paylaşım düzenleme:** gönderildikten sonra yazıyı düzeltebilme
+- [ ] **İngilizce arayüz:** site dilini Türkçe / İngilizce seçebilme
+- [ ] **iOS uygulaması**
+
 ## Geri bildirim ve öneriler
 
 Her türlü öneri, hata bildirimi ve fikir memnuniyetle karşılanır.
