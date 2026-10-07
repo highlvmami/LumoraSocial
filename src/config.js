@@ -25,6 +25,9 @@ export const config = {
   },
   sessionSecret: process.env.SESSION_SECRET || '',
   adminSetupKey: process.env.ADMIN_SETUP_KEY || '',
+
+  // Fotoğraf denetimi (Sightengine). Boşsa fotoğraflar denetlenmez.
+  sightengine: { user: process.env.SIGHTENGINE_USER || '', secret: process.env.SIGHTENGINE_SECRET || '' },
   isProduction: process.env.NODE_ENV === 'production',
 
   // E-postalardaki bağlantılar ve sosyal giriş dönüş adresleri bu adresle kurulur

@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import { MAX_IMAGE_BYTES, removeUpload, saveImage } from '../uploads.js';
+import { MAX_IMAGE_BYTES, removeUpload, saveCheckedImage } from '../uploads.js';
 import { requireAuth } from '../middleware/auth.js';
 import { db } from '../db.js';
 import * as v from '../validation.js';
@@ -29,8 +29,8 @@ router.get('/avatar-colors', (_req, res) => res.json({ colors: AVATAR_COLORS, so
 /* ---- Profil ve kapak fotoğrafı: gövde doğrudan resim baytlarıdır (Content-Type: image/jpeg|png|webp) ---- */
 const rawImage = express.raw({ type: ['image/jpeg', 'image/png', 'image/webp'], limit: MAX_IMAGE_BYTES });
 
-router.put('/me/avatar', rawImage, (req, res) => {
-  removeUpload(setAvatarUrl(req.user.id, saveImage('avatars', req.body)));
+router.put('/me/avatar', rawImage, async (req, res) => {
+  removeUpload(setAvatarUrl(req.user.id, await saveCheckedImage('avatars', req.body)));
   res.json({ user: toSelf(findUserById(req.user.id)) });
 });
 
@@ -39,8 +39,8 @@ router.delete('/me/avatar', (req, res) => {
   res.json({ user: toSelf(findUserById(req.user.id)) });
 });
 
-router.put('/me/cover', rawImage, (req, res) => {
-  removeUpload(setCoverUrl(req.user.id, saveImage('covers', req.body)));
+router.put('/me/cover', rawImage, async (req, res) => {
+  removeUpload(setCoverUrl(req.user.id, await saveCheckedImage('covers', req.body)));
   res.json({ user: toSelf(findUserById(req.user.id)) });
 });
 

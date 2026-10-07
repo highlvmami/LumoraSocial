@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import { MAX_IMAGE_BYTES, saveImage } from '../uploads.js';
+import { MAX_IMAGE_BYTES, saveCheckedImage } from '../uploads.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requestLimiter } from '../middleware/rateLimit.js';
 import * as v from '../validation.js';
@@ -62,11 +62,11 @@ router.post('/with/:username', sendLimiter, (req, res) => {
 });
 
 /** Fotoğraflı mesaj: gövde resim baytlarıdır, isteğe bağlı yazı ?text= ile gelir. */
-router.post('/with/:username/photo', sendLimiter, express.raw({ type: ['image/jpeg', 'image/png', 'image/webp'], limit: MAX_IMAGE_BYTES }), (req, res) => {
+router.post('/with/:username/photo', sendLimiter, express.raw({ type: ['image/jpeg', 'image/png', 'image/webp'], limit: MAX_IMAGE_BYTES }), async (req, res) => {
   const other = requireOther(req);
   if (!canMessage(req.user, other)) throw new v.HttpError(403, 'Bu kişiye mesaj gönderemezsin.');
-  const text = v.str(req.query.text ?? '', { field: 'Mesaj', max: 2000 });
-  const imageUrl = saveImage('messages', req.body);
+  const text = v.clean(v.str(req.query.text ?? '', { field: 'Mesaj', max: 2000 }), 'Mesaj');
+  const imageUrl = await saveCheckedImage('messages', req.body);
   typing.delete(`${req.user.id}:${other.id}`);
   res.status(201).json({ message: sendMessage(req.user.id, other.id, text, imageUrl) });
 });

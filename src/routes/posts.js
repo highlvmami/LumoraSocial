@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import { MAX_IMAGE_BYTES, saveImage } from '../uploads.js';
+import { MAX_IMAGE_BYTES, saveCheckedImage } from '../uploads.js';
 import { db } from '../db.js';
 import { isStaff, requireAuth } from '../middleware/auth.js';
 import * as v from '../validation.js';
@@ -64,11 +64,11 @@ router.get('/', (req, res) => {
 router.post(
   '/images',
   express.raw({ type: ['image/jpeg', 'image/png', 'image/webp'], limit: MAX_IMAGE_BYTES }),
-  (req, res) => {
+  async (req, res) => {
     const pending = db.prepare('SELECT COUNT(*) AS n FROM post_images WHERE user_id = ? AND post_id IS NULL').get(req.user.id).n;
     if (pending >= 20) throw v.bad('Çok fazla bekleyen fotoğraf var. Önce paylaşımını tamamla.');
     const dim = (x) => Math.max(0, Math.min(10000, Number.parseInt(x, 10) || 0));
-    const url = saveImage('posts', req.body);
+    const url = await saveCheckedImage('posts', req.body);
     const id = addPendingImage(req.user.id, url, dim(req.query.w), dim(req.query.h));
     res.status(201).json({ image: { id, url } });
   }

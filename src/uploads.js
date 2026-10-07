@@ -4,6 +4,7 @@ import path from 'node:path';
 import { config } from './config.js';
 import { db } from './db.js';
 import { bad } from './validation.js';
+import { isExplicitImage } from './services/moderation.js';
 
 export const UPLOADS_URL = '/uploads';
 export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
@@ -48,4 +49,12 @@ export function removeUpload(url) {
   const file = path.resolve(config.uploadsDir, key);
   if (!file.startsWith(config.uploadsDir + path.sep)) return; // klasör dışına çıkmayı engelle
   fs.rm(file, { force: true }, () => {});
+}
+
+/** Önce otomatik denetimden geçirir (çıplaklık), sonra kaydeder. */
+export async function saveCheckedImage(folder, buffer) {
+  if (Buffer.isBuffer(buffer) && buffer.length && (await isExplicitImage(buffer))) {
+    throw bad('Bu fotoğraf uygunsuz içerik barındırdığı için yüklenemedi.');
+  }
+  return saveImage(folder, buffer);
 }

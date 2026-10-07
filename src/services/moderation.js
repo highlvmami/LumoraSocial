@@ -5,6 +5,8 @@
  * konan nokta/boşluk (s.i.k, f u c k).
  */
 
+import { config } from '../config.js';
+
 // Rakam ve sembolle yazılan harfler
 const LEET = { 0: 'o', 1: 'i', 3: 'e', 4: 'a', 5: 's', 7: 't', 8: 'b', '@': 'a', $: 's', '!': 'i', '€': 'e' };
 // Türkçe harfler sadeleştirilir; ı ayrıca ele alınır (sık/sik karışmasın diye)
@@ -98,4 +100,32 @@ export function isOffensive(text) {
     const w = normalizeWord(list[i] + t, false);
     return LONG_PREFIXES.some((p) => w.startsWith(p));
   });
+}
+
+/*
+ * Fotoğraf denetimi (Sightengine, ayda 2000 fotoğrafa kadar ücretsiz).
+ * SIGHTENGINE_USER / SIGHTENGINE_SECRET yoksa denetim atlanır. Servis hata verirse fotoğraf kabul edilir
+ * (site çalışmaya devam etsin diye) ve sunucu günlüğüne yazılır.
+ */
+const NUDITY_LIMIT = 0.5;
+
+/** Çıplaklık / cinsel içerik varsa true döner. */
+export async function isExplicitImage(buffer) {
+  const { user, secret } = config.sightengine;
+  if (!user || !secret) return false;
+  try {
+    const form = new FormData();
+    form.append('media', new Blob([buffer]), 'image');
+    form.append('models', 'nudity-2.1');
+    form.append('api_user', user);
+    form.append('api_secret', secret);
+    const res = await fetch('https://api.sightengine.com/1.0/check.json', { method: 'POST', body: form, signal: AbortSignal.timeout(10000) });
+    const data = await res.json();
+    if (data.status !== 'success') throw new Error(data.error?.message || `HTTP ${res.status}`);
+    const n = data.nudity || {};
+    return [n.sexual_activity, n.sexual_display, n.erotica].some((score) => (score || 0) >= NUDITY_LIMIT);
+  } catch (err) {
+    console.warn('Fotoğraf denetimi yapılamadı:', err.message);
+    return false;
+  }
 }

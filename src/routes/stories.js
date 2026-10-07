@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import { MAX_IMAGE_BYTES, saveImage } from '../uploads.js';
+import { MAX_IMAGE_BYTES, saveCheckedImage } from '../uploads.js';
 import { isStaff, requireAuth } from '../middleware/auth.js';
 import * as v from '../validation.js';
 import { canViewPostsOf, followStatus } from '../models/follows.js';
@@ -110,10 +110,10 @@ router.post('/', (req, res) => {
 });
 
 /** Fotoğraflı hikaye: gövde resim baytlarıdır, isteğe bağlı yazı ?text= ile gelir. */
-router.post('/photo', express.raw({ type: ['image/jpeg', 'image/png', 'image/webp'], limit: MAX_IMAGE_BYTES }), (req, res) => {
+router.post('/photo', express.raw({ type: ['image/jpeg', 'image/png', 'image/webp'], limit: MAX_IMAGE_BYTES }), async (req, res) => {
   checkLimit(req.user.id);
-  const text = v.str(req.query.text ?? '', { field: 'Hikaye metni', max: STORY_TEXT_MAX });
-  const imageUrl = saveImage('stories', req.body);
+  const text = v.clean(v.str(req.query.text ?? '', { field: 'Hikaye metni', max: STORY_TEXT_MAX }), 'Hikaye metni');
+  const imageUrl = await saveCheckedImage('stories', req.body);
   const id = createStory(req.user.id, { imageUrl, text });
   res.status(201).json({ id });
 });
