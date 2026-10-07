@@ -4,6 +4,7 @@ import { db } from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requestLimiter } from '../middleware/rateLimit.js';
 import * as v from '../validation.js';
+import { checkAchievements } from '../models/achievements.js';
 import {
   DEFAULT_PRIVACY,
   destroySessions,
@@ -244,6 +245,7 @@ router.post('/follow-requests/:userId/accept', (req, res) => {
   if (!acceptRequest(followerId, req.user.id)) throw new v.HttpError(404, 'İstek bulunamadı.');
   removeFollowRequestNotification(req.user.id, followerId);
   notify(followerId, 'follow_accepted', { actorId: req.user.id });
+  checkAchievements(followerId, req.user.id);
   res.json({ requests: listRequests(req.user.id) });
 });
 

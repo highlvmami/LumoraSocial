@@ -3,6 +3,7 @@ import { MAX_IMAGE_BYTES, saveCheckedImage } from '../uploads.js';
 import { db } from '../db.js';
 import { isStaff, requireAuth } from '../middleware/auth.js';
 import * as v from '../validation.js';
+import { checkAchievements } from '../models/achievements.js';
 import {
   REACTIONS,
   MAX_POST_IMAGES,
@@ -90,6 +91,7 @@ router.post('/', (req, res) => {
   if (poll && (quoted || imageIds.length)) throw v.bad('Anket, fotoğraflı veya yeniden paylaşılan gönderiye eklenemez.');
   const content = v.clean(v.str(req.body.content, { field: 'Paylaşım', min: imageIds.length || quoted ? 0 : 1, max: 1000 }), 'Paylaşım');
   const id = createPost(req.user.id, content, imageIds, { quoteOf: quoted?.id ?? null, poll });
+  checkAchievements(req.user.id);
   if (quoted && quoted.user_id !== req.user.id) {
     notify(quoted.user_id, 'post_repost', { actorId: req.user.id, data: { postId: id, preview: preview(quoted.content), text: preview(content, 120) } });
   }
@@ -166,6 +168,7 @@ router.post('/:id/reactions', (req, res) => {
   const emoji = String(req.body.emoji || '');
   if (!REACTIONS.includes(emoji)) throw v.bad('Geçersiz tepki.');
   const added = toggleReaction(post.id, req.user.id, emoji);
+  if (added) checkAchievements(post.user_id);
   // Paylaşım sahibine bildirim (kendi paylaşımına verdiği tepki hariç)
   if (post.user_id !== req.user.id) {
     if (added) notify(post.user_id, 'post_reaction', { actorId: req.user.id, data: { postId: post.id, emoji, preview: preview(post.content) } });
@@ -178,6 +181,7 @@ router.post('/:id/comments', (req, res) => {
   const post = requirePost(v.id(req.params.id), req.user);
   const content = v.clean(v.str(req.body.content, { field: 'Yorum', min: 1, max: 500 }), 'Yorum');
   const commentId = addComment(post.id, req.user.id, content);
+  checkAchievements(req.user.id);
   if (post.user_id !== req.user.id) {
     notify(post.user_id, 'post_comment', {
       actorId: req.user.id,

@@ -3,6 +3,7 @@ import { MAX_IMAGE_BYTES, removeUpload, saveCheckedImage } from '../uploads.js';
 import { requireAuth } from '../middleware/auth.js';
 import { db } from '../db.js';
 import * as v from '../validation.js';
+import { ACHIEVEMENTS, checkAchievements, listAchievements } from '../models/achievements.js';
 import {
   AVATAR_COLORS,
   SOCIAL_KEYS,
@@ -129,6 +130,14 @@ router.get('/:username', (req, res) => {
   res.json({ user: profile, locked: false, ...feed });
 });
 
+/** Başarımlar: kendi profilinde hepsi ilerlemesiyle, başkasının profilinde yalnızca kazanılanlar. */
+router.get('/:username/achievements', (req, res) => {
+  const u = requireUser(req.params.username);
+  const isSelf = u.id === req.user.id;
+  if (!isSelf && isBlockedEitherWay(req.user.id, u.id)) throw new v.HttpError(404, 'Kullanıcı bulunamadı.');
+  res.json({ achievements: listAchievements(u.id, { withProgress: isSelf }), total: ACHIEVEMENTS.length });
+});
+
 /** Takip et. Gizli hesaplarda istek gönderilir ve hesap sahibi onaylar. */
 router.post('/:username/follow', (req, res) => {
   const u = requireUser(req.params.username);
@@ -139,6 +148,7 @@ router.post('/:username/follow', (req, res) => {
   const before = followStatus(req.user.id, u.id);
   const needsApproval = privacyOf(u).privateAccount;
   follow(req.user.id, u.id, needsApproval ? 'pending' : 'accepted');
+  if (!needsApproval) checkAchievements(req.user.id, u.id);
   if (before === 'none') notify(u.id, needsApproval ? 'follow_request' : 'new_follower', { actorId: req.user.id });
   res.json(getFollowStats(u.id, req.user.id));
 });

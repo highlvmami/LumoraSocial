@@ -2,6 +2,7 @@ import express, { Router } from 'express';
 import { MAX_IMAGE_BYTES, saveCheckedImage } from '../uploads.js';
 import { isStaff, requireAuth } from '../middleware/auth.js';
 import * as v from '../validation.js';
+import { checkAchievements } from '../models/achievements.js';
 import { canViewPostsOf, followStatus } from '../models/follows.js';
 import { findByUsername } from '../models/users.js';
 import { isBlockedEitherWay } from '../models/safety.js';
@@ -106,6 +107,7 @@ router.post('/', (req, res) => {
   const text = v.clean(v.str(req.body.text, { field: 'Hikaye metni', min: 1, max: STORY_TEXT_MAX }), 'Hikaye metni');
   const bg = v.oneOf(req.body.bg || STORY_BACKGROUNDS[0], STORY_BACKGROUNDS, 'Arka plan rengi');
   const id = createStory(req.user.id, { text, bg });
+  checkAchievements(req.user.id);
   res.status(201).json({ id });
 });
 
@@ -115,6 +117,7 @@ router.post('/photo', express.raw({ type: ['image/jpeg', 'image/png', 'image/web
   const text = v.clean(v.str(req.query.text ?? '', { field: 'Hikaye metni', max: STORY_TEXT_MAX }), 'Hikaye metni');
   const imageUrl = await saveCheckedImage('stories', req.body);
   const id = createStory(req.user.id, { imageUrl, text });
+  checkAchievements(req.user.id);
   res.status(201).json({ id });
 });
 

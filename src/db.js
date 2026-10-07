@@ -436,6 +436,15 @@ const migrations = [
   );
   CREATE INDEX idx_post_tags_tag ON post_tags(tag, post_id);
   `,
+  // 18: başarımlar
+  `
+  CREATE TABLE user_achievements (
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    key         TEXT NOT NULL,
+    unlocked_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (user_id, key)
+  );
+  `,
 ];
 
 function schemaVersion() {

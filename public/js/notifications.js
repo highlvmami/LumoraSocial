@@ -22,6 +22,7 @@ const TEMPLATES = {
   new_follower: (n) => ['', [userLink(n.actor), ' seni takip etmeye başladı.']],
   follow_request: (n) => ['', [userLink(n.actor), ' seni takip etmek istiyor.']],
   follow_accepted: (n) => ['', [userLink(n.actor), ' takip isteğini kabul etti.']],
+  achievement: (n) => ['', [h('b', {}, 'Yeni başarım kazandın: '), `${n.data.icon} ${n.data.title}`, ' · ', h('a', { href: '#/basarimlar' }, 'Başarımlarım')]],
   new_device: (n) => ['', [`Hesabına yeni bir cihazdan giriş yapıldı: `, h('b', {}, n.data.device), ` (IP ${ipLabel(n.data.ip)}). Bu sen değilsen şifreni değiştir.`]],
   suspicious_login: (n) => [
     '',

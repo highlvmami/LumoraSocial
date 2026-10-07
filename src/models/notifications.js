@@ -12,6 +12,7 @@ import { pushToUser } from '../services/push.js';
  *  post_comment      actor { postId, commentId, preview, text }   paylaşımına yorum
  *  post_repost       actor { postId, preview, text }              paylaşımını yeniden paylaştı
  *  mention           actor { postId, commentId, preview, text }   paylaşımda/yorumda senden bahsetti
+ *  achievement       { key, icon, title }                         yeni başarım kazanıldı
  */
 export function notify(userId, type, { actorId = null, data = {} } = {}) {
   db.prepare('INSERT INTO notifications (user_id, type, actor_id, data) VALUES (?, ?, ?, ?)').run(
@@ -39,6 +40,7 @@ function sendPush(userId, type, actorId, d) {
     follow_accepted: [actor, 'takip isteğini kabul etti', `/akis#/u/${actor}`],
     new_device: ['Yeni cihazdan giriş', `${d.device} (IP ${d.ip})`, '/akis#/ayarlar/guvenlik'],
     suspicious_login: ['Şüpheli giriş', `${d.device} (IP ${d.ip})`, '/akis#/ayarlar/guvenlik'],
+    achievement: ['Yeni başarım kazandın!', `${d.icon} ${d.title}`, '/akis#/basarimlar'],
   };
   const [title, body, url] = texts[type] || ['LumoraSocial', 'Yeni bir bildirimin var', '/akis#/bildirimler'];
   pushToUser(userId, { title: title || 'LumoraSocial', body, url, tag: `${type}-${d.postId || actorId || ''}` });

@@ -85,3 +85,4 @@
      - Otomatik fotoğraf denetimi: paylaşım, hikaye, mesaj, profil ve kapak fotoğraflarında çıplaklık/cinsel içerik reddediliyor (Sightengine anahtarları girilince devreye girer)
      - #etiketler: gönderideki #etikete tıklayınca o etiketin sayfası açılıyor (toplam gönderi sayısı ve o etiketli gönderiler)
      - Popüler konular: son 30 günün en çok kullanılan etiketleri ve gönderi sayıları (bilgisayarda sol sütunda, telefonda Keşfet'te)
+     - Başarım sistemi: paylaşım, mesaj, takip, takipçi, yorum, aldığın tepkiler, hikaye, anket, etiket ve üyelik süresine göre 21 başarım. Kazanınca bildirim geliyor; profilde rozetler, menüde "Başarımlar" sayfasında ilerleme çubukları

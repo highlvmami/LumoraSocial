@@ -3,6 +3,7 @@ import { MAX_IMAGE_BYTES, saveCheckedImage } from '../uploads.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requestLimiter } from '../middleware/rateLimit.js';
 import * as v from '../validation.js';
+import { checkAchievements } from '../models/achievements.js';
 import { findByUsername, privacyOf, toPublic } from '../models/users.js';
 import { followStatus } from '../models/follows.js';
 import { isBlockedEitherWay } from '../models/safety.js';
@@ -58,6 +59,7 @@ router.post('/with/:username', sendLimiter, (req, res) => {
   }
   const content = v.clean(v.str(req.body.content, { field: 'Mesaj', min: 1, max: 2000 }), 'Mesaj');
   typing.delete(`${req.user.id}:${other.id}`);
+  checkAchievements(req.user.id);
   res.status(201).json({ message: sendMessage(req.user.id, other.id, content) });
 });
 
@@ -68,6 +70,7 @@ router.post('/with/:username/photo', sendLimiter, express.raw({ type: ['image/jp
   const text = v.clean(v.str(req.query.text ?? '', { field: 'Mesaj', max: 2000 }), 'Mesaj');
   const imageUrl = await saveCheckedImage('messages', req.body);
   typing.delete(`${req.user.id}:${other.id}`);
+  checkAchievements(req.user.id);
   res.status(201).json({ message: sendMessage(req.user.id, other.id, text, imageUrl) });
 });
 

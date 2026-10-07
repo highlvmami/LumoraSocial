@@ -5,6 +5,7 @@ import session from 'express-session';
 import { config } from './config.js';
 import './db.js';
 import { backfillTags, cleanupPendingImages } from './models/posts.js';
+import { backfillAchievements } from './models/achievements.js';
 import { cleanupLogs } from './models/audit.js';
 import { SqliteSessionStore } from './sessionStore.js';
 import { loadUser } from './middleware/auth.js';
@@ -152,8 +153,9 @@ app.use((err, _req, res, _next) => {
 // Etiket tablosundan önceki paylaşımların etiketleri (bir kez)
 try {
   backfillTags();
+  backfillAchievements();
 } catch (err) {
-  console.warn('Etiketler doldurulamadı:', err.message);
+  console.warn('Etiketler/başarımlar doldurulamadı:', err.message);
 }
 
 // Paylaşılmadan bırakılan fotoğrafları temizle (açılışta ve saatte bir)

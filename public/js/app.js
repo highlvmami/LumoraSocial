@@ -800,6 +800,7 @@ function showUser(username) {
       if (!header) {
         header = profileHeader(data.user);
         list.before(header);
+        list.before(achievementStrip(data.user));
         if (!data.locked) list.before(highlightsRow(data.user, state.me));
         if (data.locked) {
           list.before(
@@ -821,6 +822,62 @@ function showUser(username) {
     },
     null
   );
+}
+
+/** Profilde kazanılan başarım rozetleri (kimse kazanmadıysa ve başkasının profiliyse gizli) */
+function achievementStrip(u) {
+  const card = h('section', { class: 'card achievement-strip hidden' });
+  const isSelf = u.id === state.me.id;
+  api(`/users/${encodeURIComponent(u.username)}/achievements`)
+    .then(({ achievements, total }) => {
+      const earned = achievements.filter((a) => a.unlockedAt);
+      if (!earned.length && !isSelf) return;
+      card.replaceChildren(
+        h(
+          'div',
+          { class: 'achievement-strip-head' },
+          h('h3', {}, 'Başarımlar'),
+          h('span', { class: 'muted small' }, `${earned.length} / ${total}`),
+          isSelf ? h('a', { class: 'small', href: '#/basarimlar' }, 'Tümünü gör') : null
+        ),
+        earned.length
+          ? h('div', { class: 'achievement-icons' }, ...earned.map((a) => h('span', { class: 'achievement-icon', title: `${a.title}: ${a.desc}` }, a.icon)))
+          : h('p', { class: 'muted small' }, 'Henüz başarım yok. İlk paylaşımını yaparak başla!')
+      );
+      card.classList.remove('hidden');
+    })
+    .catch(() => {});
+  return card;
+}
+
+/** Başarımlarım: hepsi, kazanılmayanlar soluk ve ilerleme çubuğuyla */
+async function showAchievements() {
+  main.replaceChildren(h('div', { class: 'feed-header' }, h('h2', {}, 'Başarımlar')));
+  try {
+    const { achievements, total } = await api(`/users/${encodeURIComponent(state.me.username)}/achievements`);
+    const earned = achievements.filter((a) => a.unlockedAt).length;
+    main.append(
+      h('div', { class: 'card achievement-summary' }, h('b', {}, `${earned} / ${total} başarım kazandın`), h('div', { class: 'progress' }, h('span', { style: { width: `${Math.round((earned / total) * 100)}%` } }))),
+      h(
+        'div',
+        { class: 'achievement-grid' },
+        ...achievements.map((a) =>
+          h(
+            'div',
+            { class: `card achievement ${a.unlockedAt ? 'unlocked' : 'locked'}` },
+            h('div', { class: 'achievement-badge' }, a.icon),
+            h('b', {}, a.title),
+            h('div', { class: 'muted small' }, a.desc),
+            a.unlockedAt
+              ? h('div', { class: 'achievement-date small' }, `Kazanıldı · ${formatDate(a.unlockedAt)}`)
+              : h('div', { class: 'achievement-progress' }, h('div', { class: 'progress' }, h('span', { style: { width: `${Math.round((a.progress / a.goal) * 100)}%` } })), h('span', { class: 'muted small' }, `${a.progress} / ${a.goal}`))
+          )
+        )
+      )
+    );
+  } catch (err) {
+    main.append(h('div', { class: 'card empty-state' }, err.message));
+  }
 }
 
 /** Kaydedilen paylaşımlar */
@@ -895,6 +952,7 @@ function route() {
   const postMatch = path.match(/^\/p\/(\d+)$/);
   const isSearch = path === '/ara';
   const isBookmarks = path === '/kaydedilenler';
+  const isAchievements = path === '/basarimlar';
   const isExplore = path === '/kesfet';
   const tagMatch = path.match(/^\/etiket\/(.+)$/);
   const messagesMatch = path.match(/^\/mesajlar(?:\/(.+))?$/);
@@ -911,7 +969,9 @@ function route() {
           ? 'messages'
           : isSearch
             ? 'search'
-            : isBookmarks
+            : isAchievements
+              ? 'achievements'
+              : isBookmarks
               ? 'bookmarks'
               : isExplore || tagMatch
                 ? 'explore'
@@ -923,6 +983,7 @@ function route() {
   if (userMatch) showUser(decodeURIComponent(userMatch[1]));
   else if (postMatch) showPost(postMatch[1]);
   else if (isBookmarks) showBookmarks();
+  else if (isAchievements) showAchievements();
   else if (tagMatch) showTag(decodeURIComponent(tagMatch[1]));
   else if (isExplore) showExplore(new URLSearchParams(hash.split('?')[1] || ''));
   else if (isSearch) showSearch(ctx, new URLSearchParams(hash.split('?')[1] || ''));
