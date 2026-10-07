@@ -33,7 +33,7 @@ function renderProfileCard() {
   document.getElementById('nav-me').href = `#/u/${encodeURIComponent(me.username)}`;
   const navAdmin = document.getElementById('nav-admin');
   navAdmin.classList.toggle('hidden', me.role === 'member');
-  navAdmin.textContent = me.role === 'moderator' ? 'Denetim paneli' : 'Yönetim paneli';
+  navAdmin.querySelector('.nav-label').textContent = me.role === 'moderator' ? 'Denetim paneli' : 'Yönetim paneli';
 }
 
 function renderUnread() {
