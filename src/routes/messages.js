@@ -56,7 +56,7 @@ router.post('/with/:username', sendLimiter, (req, res) => {
   if (!canMessage(req.user, other)) {
     throw new v.HttpError(403, isBlockedEitherWay(req.user.id, other.id) ? 'Bu kişiyle mesajlaşamazsın.' : 'Bu gizli hesaba yalnızca takipçileri mesaj gönderebilir.');
   }
-  const content = v.str(req.body.content, { field: 'Mesaj', min: 1, max: 2000 });
+  const content = v.clean(v.str(req.body.content, { field: 'Mesaj', min: 1, max: 2000 }), 'Mesaj');
   typing.delete(`${req.user.id}:${other.id}`);
   res.status(201).json({ message: sendMessage(req.user.id, other.id, content) });
 });

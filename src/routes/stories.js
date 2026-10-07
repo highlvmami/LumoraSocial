@@ -148,7 +148,7 @@ router.post('/:id/react', (req, res) => {
 /** Yazılı yanıt: hikaye sahibine mesaj olarak gider. */
 router.post('/:id/reply', (req, res) => {
   const story = othersStory(req);
-  const text = v.str(req.body.text, { field: 'Yanıt', min: 1, max: 1000 });
+  const text = v.clean(v.str(req.body.text, { field: 'Yanıt', min: 1, max: 1000 }), 'Yanıt');
   markViewed(story.id, req.user.id);
   sendMessage(req.user.id, story.user_id, `Hikayene yanıt (${quote(story)}): ${text}`);
   res.status(201).json({ ok: true });

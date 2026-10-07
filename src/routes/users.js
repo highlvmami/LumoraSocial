@@ -65,7 +65,7 @@ router.patch('/me', (req, res) => {
   }
   if (b.birthDate !== undefined) changes.birthDate = v.date(b.birthDate ?? '', 'Doğum tarihi');
   if (b.location !== undefined) changes.location = v.clean(v.str(b.location, { field: 'Konum', max: 60 }), 'Konum');
-  if (b.website !== undefined) changes.website = v.url(b.website);
+  if (b.website !== undefined) changes.website = v.clean(v.url(b.website), 'Web sitesi');
   if (b.occupation !== undefined) changes.occupation = v.clean(v.str(b.occupation, { field: 'Meslek', max: 60 }), 'Meslek');
   if (b.education !== undefined) changes.education = v.clean(v.str(b.education, { field: 'Eğitim', max: 100 }), 'Eğitim');
   if (b.interests !== undefined) {
@@ -78,7 +78,7 @@ router.patch('/me', (req, res) => {
     if (typeof b.socialLinks !== 'object' || b.socialLinks === null) throw v.bad('Sosyal bağlantılar geçersiz.');
     const links = {};
     for (const key of SOCIAL_KEYS) {
-      const val = v.str(b.socialLinks[key] ?? '', { field: 'Sosyal bağlantı', max: 100 });
+      const val = v.clean(v.str(b.socialLinks[key] ?? '', { field: 'Sosyal bağlantı', max: 100 }), 'Sosyal bağlantı');
       if (!val) continue;
       // Tam adres girildiyse doğrula; kullanıcı adı girildiyse @ işaretini at
       links[key] = /^https?:\/\//i.test(val) ? v.url(val, 'Sosyal bağlantı') : val.replace(/^@/, '').replace(/[^\w.\-]/g, '');
