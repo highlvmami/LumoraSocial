@@ -80,3 +80,4 @@
      - Gönderilerde kullanıcı adının sağında rol rozeti: Yönetici (hareketli alev kenarlık, sağ üstte yuvarlak içinde taç), Denetimci (mavi kenarlık + büyüteç)
      - Gönderilerde "... önce" yazısı gönderinin sol altına taşındı
      - "Yeniden paylaş" yazısı yerine dönen ok simgesi; ayrıca gönderinin ⋯ menüsünde de var
+     - Yeniden paylaş artık yalnızca gönderinin sağındaki ⋯ menüsünde, yazı yerine 🔁 simgesiyle

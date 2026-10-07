@@ -192,7 +192,7 @@ export function dropdown(items, { label = '⋯', title = 'Diğer' } = {}) {
   });
   panel.append(
     ...list.map((it) =>
-      h('button', { type: 'button', role: 'menuitem', class: `dropdown-item ${it.danger ? 'danger' : ''}`, onclick: (e) => (close(), it.onClick(e.currentTarget)) }, it.label)
+      h('button', { type: 'button', role: 'menuitem', class: `dropdown-item ${it.danger ? 'danger' : ''}`, title: it.title, 'aria-label': it.title, onclick: (e) => (close(), it.onClick(e.currentTarget)) }, it.label)
     )
   );
   wrap.append(btn, panel);
