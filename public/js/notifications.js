@@ -23,6 +23,7 @@ const TEMPLATES = {
   follow_request: (n) => ['', [userLink(n.actor), ' seni takip etmek istiyor.']],
   follow_accepted: (n) => ['', [userLink(n.actor), ' takip isteğini kabul etti.']],
   achievement: (n) => ['', [h('b', {}, 'Yeni başarım kazandın: '), `${n.data.icon} ${n.data.title}`, ' · ', h('a', { href: '#/basarimlar' }, 'Başarımlarım')]],
+  feedback_done: (n) => ['', [h('b', {}, 'Geri bildirimin değerlendirildi: '), `"${n.data.preview}" tamamlandı. Teşekkürler! `, h('a', { href: '#/geri-bildirim' }, 'Geri bildirimlerim')]],
   new_device: (n) => ['', [`Hesabına yeni bir cihazdan giriş yapıldı: `, h('b', {}, n.data.device), ` (IP ${ipLabel(n.data.ip)}). Bu sen değilsen şifreni değiştir.`]],
   suspicious_login: (n) => [
     '',

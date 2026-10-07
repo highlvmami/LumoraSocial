@@ -4,6 +4,8 @@ import * as v from '../validation.js';
 import { removeUpload } from '../uploads.js';
 import { CATEGORIES, listLogs, log, logSummary } from '../models/audit.js';
 import { closeReports, findReport, listReports, openReportCount } from '../models/safety.js';
+import { findFeedback, listFeedback, newFeedbackCount, setFeedbackStatus } from '../models/feedback.js';
+import { notify, preview } from '../models/notifications.js';
 import { deleteComment, deletePost, findComment, findPost } from '../models/posts.js';
 import {
   countActiveAdmins,
@@ -40,7 +42,9 @@ function guardLastAdmin(user) {
   }
 }
 
-router.get('/stats', (_req, res) => res.json({ ...getStats(), last24h: logSummary(), openReports: openReportCount() }));
+router.get('/stats', (req, res) =>
+  res.json({ ...getStats(), last24h: logSummary(), openReports: openReportCount(), ...(req.user.role === 'admin' && { newFeedback: newFeedbackCount() }) })
+);
 
 /* ---- Şikâyetler ---- */
 
@@ -84,6 +88,24 @@ router.post('/reports/:id', (req, res) => {
     data: { reportId: report.id, type: report.target_type, action },
   });
   res.json({ ok: true, openCount: openReportCount() });
+});
+
+/* ---- Geri bildirimler (yalnızca yönetici) ---- */
+
+router.get('/feedback', (req, res) => {
+  const status = ['new', 'read', 'done', 'all'].includes(req.query.status) ? req.query.status : 'new';
+  const before = req.query.before ? v.id(req.query.before) : null;
+  res.json({ ...listFeedback({ status, before }), newCount: newFeedbackCount() });
+});
+
+/** status: read | done | new. Tamamlanınca gönderen üyeye bildirim gider. */
+router.post('/feedback/:id', (req, res) => {
+  const item = findFeedback(v.id(req.params.id));
+  if (!item) throw new v.HttpError(404, 'Geri bildirim bulunamadı.');
+  const status = v.oneOf(req.body.status, ['new', 'read', 'done'], 'Durum');
+  setFeedbackStatus(item.id, status);
+  if (status === 'done' && item.status !== 'done') notify(item.user_id, 'feedback_done', { data: { preview: preview(item.message) } });
+  res.json({ ok: true, newCount: newFeedbackCount() });
 });
 
 /** Olay kayıtları (log). category: register | login | login_failed | account | admin | content */

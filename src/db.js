@@ -445,6 +445,20 @@ const migrations = [
     PRIMARY KEY (user_id, key)
   );
   `,
+  // 19: geri bildirim ve öneriler
+  `
+  CREATE TABLE feedback (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kind       TEXT NOT NULL,
+    message    TEXT NOT NULL,
+    status     TEXT NOT NULL DEFAULT 'new',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    handled_at TEXT
+  );
+  CREATE INDEX idx_feedback_status ON feedback(status, id);
+  CREATE INDEX idx_feedback_user ON feedback(user_id, id);
+  `,
 ];
 
 function schemaVersion() {

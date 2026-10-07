@@ -13,6 +13,7 @@ import { pushToUser } from '../services/push.js';
  *  post_repost       actor { postId, preview, text }              paylaşımını yeniden paylaştı
  *  mention           actor { postId, commentId, preview, text }   paylaşımda/yorumda senden bahsetti
  *  achievement       { key, icon, title }                         yeni başarım kazanıldı
+ *  feedback_done     { preview }                                  geri bildirimi tamamlandı olarak işaretlendi
  */
 export function notify(userId, type, { actorId = null, data = {} } = {}) {
   db.prepare('INSERT INTO notifications (user_id, type, actor_id, data) VALUES (?, ?, ?, ?)').run(
@@ -41,6 +42,7 @@ function sendPush(userId, type, actorId, d) {
     new_device: ['Yeni cihazdan giriş', `${d.device} (IP ${d.ip})`, '/akis#/ayarlar/guvenlik'],
     suspicious_login: ['Şüpheli giriş', `${d.device} (IP ${d.ip})`, '/akis#/ayarlar/guvenlik'],
     achievement: ['Yeni başarım kazandın!', `${d.icon} ${d.title}`, '/akis#/basarimlar'],
+    feedback_done: ['Geri bildirimin değerlendirildi', `Teşekkürler! "${d.preview}" ile ilgili geri bildirimin tamamlandı.`, '/akis#/geri-bildirim'],
   };
   const [title, body, url] = texts[type] || ['LumoraSocial', 'Yeni bir bildirimin var', '/akis#/bildirimler'];
   pushToUser(userId, { title: title || 'LumoraSocial', body, url, tag: `${type}-${d.postId || actorId || ''}` });

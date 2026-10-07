@@ -904,3 +904,16 @@ label.btn { margin: 0; font-size: 13px; }
   .topbar-inner { max-width: 1260px; }
   .rightbar { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 82px; align-self: start; }
 }
+
+/* ================= Geri bildirim ================= */
+.feedback-form { padding: 16px 20px; margin-bottom: 16px; display: grid; gap: 12px; }
+.feedback-kinds { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-btn { border: 1px solid var(--border); background: var(--surface); color: var(--text); padding: 6px 14px; border-radius: 999px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.chip-btn.active { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+.feedback-list h3 { font-size: 15px; margin: 4px 0 10px; }
+.feedback-item { padding: 14px 18px; margin-bottom: 10px; }
+.feedback-item p { margin-top: 6px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.feedback-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pill.new { background: var(--primary-soft); color: var(--primary); }
+.pill.read { background: var(--surface-2); color: var(--muted); }
+.pill.done { background: var(--success-soft); color: var(--success); }

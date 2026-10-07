@@ -91,3 +91,4 @@
      - Önerilen kişiler bilgisayarda Popüler konuların altında; telefonda kartlar küçültüldü
      - Yöneticinin paylaşımları herkesin akışında görünüyor; yeni üyelerin akışı boş kalmıyor
      - Menü sırası: Akış, Profilim, Mesajlar, Kaydedilenler, Başarımlar, Ayarlar, Yönetim paneli (yalnızca yöneticiye), Çıkış yap. Bildirimler menüden kalktı; bilgisayarda da üstte zil simgesi var
+     - Geri bildirim ve öneri: menüde "Geri bildirim" sayfası (Öneri / Hata bildirimi / Diğer). Yönetim panelinde "Geri bildirimler" sekmesi; tamamlanınca gönderene bildirim gidiyor

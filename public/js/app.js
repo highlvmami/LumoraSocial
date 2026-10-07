@@ -881,6 +881,59 @@ async function showAchievements() {
   }
 }
 
+/** Geri bildirim ve öneri: form + daha önce gönderilenler ve durumları */
+async function showFeedback() {
+  main.replaceChildren(h('div', { class: 'feed-header' }, h('h2', {}, 'Geri bildirim ve öneri')));
+  const list = h('div', { class: 'feedback-list' });
+  const paintList = (items) =>
+    list.replaceChildren(
+      ...(items.length ? [h('h3', {}, 'Gönderdiklerin')] : []),
+      ...items.map((f) =>
+        h(
+          'div',
+          { class: 'card feedback-item' },
+          h('div', { class: 'feedback-meta' }, h('b', {}, f.kindLabel), h('span', { class: `pill ${f.status}` }, f.statusLabel), h('span', { class: 'muted small' }, formatDate(f.createdAt))),
+          h('p', {}, f.message)
+        )
+      )
+    );
+  let kinds = {};
+  try {
+    const data = await api('/feedback');
+    kinds = data.kinds;
+    paintList(data.feedback);
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+  const kindSelect = h('div', { class: 'feedback-kinds', role: 'radiogroup' });
+  let kind = 'oneri';
+  const paintKinds = () =>
+    kindSelect.replaceChildren(
+      ...Object.entries(kinds).map(([key, label]) =>
+        h('button', { type: 'button', class: `chip-btn ${key === kind ? 'active' : ''}`, role: 'radio', 'aria-checked': String(key === kind), onclick: () => ((kind = key), paintKinds()) }, label)
+      )
+    );
+  paintKinds();
+  const textarea = h('textarea', { name: 'message', rows: 5, maxlength: 2000, required: true, placeholder: 'Siteyi nasıl daha iyi yapabiliriz? Bir hata gördüysen ne yaparken olduğunu yaz.' });
+  const alertEl = h('div', { class: 'alert hidden' });
+  const form = h(
+    'form',
+    { class: 'card feedback-form' },
+    h('p', { class: 'muted small' }, 'Önerilerin ve bulduğun hatalar doğrudan yöneticiye iletilir. Tamamlandığında sana bildirim gelir.'),
+    kindSelect,
+    textarea,
+    alertEl,
+    h('div', { class: 'modal-actions' }, h('button', { type: 'submit', class: 'btn' }, 'Gönder'))
+  );
+  handleForm(form, alertEl, async ({ message }) => {
+    const data = await api('/feedback', { method: 'POST', body: { kind, message } });
+    form.reset();
+    paintList(data.feedback);
+    toast('Teşekkürler! Geri bildirimin iletildi.');
+  });
+  main.append(form, list);
+}
+
 /** Kaydedilen paylaşımlar */
 function showBookmarks() {
   main.replaceChildren(h('div', { class: 'feed-header' }, h('h2', {}, 'Kaydedilenler')));
@@ -954,6 +1007,7 @@ function route() {
   const isSearch = path === '/ara';
   const isBookmarks = path === '/kaydedilenler';
   const isAchievements = path === '/basarimlar';
+  const isFeedback = path === '/geri-bildirim';
   const isExplore = path === '/kesfet';
   const tagMatch = path.match(/^\/etiket\/(.+)$/);
   const messagesMatch = path.match(/^\/mesajlar(?:\/(.+))?$/);
@@ -970,7 +1024,9 @@ function route() {
           ? 'messages'
           : isSearch
             ? 'search'
-            : isAchievements
+            : isFeedback
+              ? 'feedback'
+              : isAchievements
               ? 'achievements'
               : isBookmarks
               ? 'bookmarks'
@@ -985,6 +1041,7 @@ function route() {
   else if (postMatch) showPost(postMatch[1]);
   else if (isBookmarks) showBookmarks();
   else if (isAchievements) showAchievements();
+  else if (isFeedback) showFeedback();
   else if (tagMatch) showTag(decodeURIComponent(tagMatch[1]));
   else if (isExplore) showExplore(new URLSearchParams(hash.split('?')[1] || ''));
   else if (isSearch) showSearch(ctx, new URLSearchParams(hash.split('?')[1] || ''));

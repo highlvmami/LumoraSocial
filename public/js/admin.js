@@ -9,7 +9,7 @@ document.getElementById('whoami').textContent = `${me.displayName} (@${me.userna
 // Denetimci yalnızca şikâyetleri görür
 const isModerator = me.role === 'moderator';
 if (isModerator) {
-  document.querySelectorAll('.admin-tabs a[data-view="users"], .admin-tabs a[data-view="logs"]').forEach((a) => a.remove());
+  document.querySelectorAll('.admin-tabs a[data-view="users"], .admin-tabs a[data-view="logs"], .admin-tabs a[data-view="feedback"]').forEach((a) => a.remove());
   document.title = 'Denetim Paneli · LumoraSocial';
 }
 document.getElementById('logout-btn').addEventListener('click', logout);
@@ -17,6 +17,7 @@ document.getElementById('logout-btn').addEventListener('click', logout);
 async function loadStats() {
   const s = await api('/admin/stats');
   paintReportCount(s.openReports);
+  if (!isModerator) paintFeedbackCount(s.newFeedback);
   const items = [
     ['Kullanıcı', s.users],
     ['Yönetici', s.admins],
@@ -342,15 +343,90 @@ async function loadReports(reset = false) {
 reportStatus.addEventListener('change', () => loadReports(true));
 reportsMore.addEventListener('click', () => loadReports());
 
-/* Sekmeler: #kullanicilar / #kayitlar */
+/* ================= Geri bildirimler ================= */
+
+const feedbackState = { before: null };
+const feedbackBox = document.getElementById('feedback');
+const feedbackMore = document.getElementById('feedback-more');
+const feedbackStatus = document.getElementById('feedback-status');
+
+function paintFeedbackCount(n) {
+  const el = document.getElementById('feedback-count');
+  el.textContent = n;
+  el.classList.toggle('hidden', !n);
+}
+
+function feedbackCard(f) {
+  const set = (status) => async () => {
+    try {
+      const res = await api(`/admin/feedback/${f.id}`, { method: 'POST', body: { status } });
+      paintFeedbackCount(res.newCount);
+      toast(status === 'done' ? 'Tamamlandı; gönderen üyeye bildirim gitti.' : 'Güncellendi.');
+      loadFeedback(true);
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  };
+  const u = f.user;
+  return h(
+    'div',
+    { class: 'report-card' },
+    h(
+      'div',
+      { class: 'report-head' },
+      h(
+        'div',
+        {},
+        h('b', {}, f.kindLabel),
+        h(
+          'div',
+          { class: 'muted small' },
+          `${logTime(f.createdAt)} · gönderen: `,
+          u ? h('a', { href: `/akis#/u/${encodeURIComponent(u.username)}`, target: '_blank' }, `@${u.username}`) : '(silinmiş)'
+        )
+      ),
+      h('span', { class: `pill ${f.status}` }, f.statusLabel)
+    ),
+    h('div', { class: 'report-snapshot' }, f.message),
+    h(
+      'div',
+      { class: 'report-actions' },
+      f.status === 'new' ? h('button', { class: 'btn sm ghost', type: 'button', onclick: set('read') }, 'Okundu') : null,
+      f.status !== 'done' ? h('button', { class: 'btn sm', type: 'button', onclick: set('done') }, '✓ Tamamlandı') : null,
+      f.status !== 'new' ? h('button', { class: 'btn sm ghost', type: 'button', onclick: set('new') }, 'Yeniye al') : null
+    )
+  );
+}
+
+async function loadFeedback(reset = false) {
+  if (reset) {
+    feedbackState.before = null;
+    feedbackBox.replaceChildren();
+  }
+  const params = new URLSearchParams({ status: feedbackStatus.value });
+  if (feedbackState.before) params.set('before', feedbackState.before);
+  const { feedback, hasMore, newCount } = await api(`/admin/feedback?${params}`);
+  paintFeedbackCount(newCount);
+  if (reset && !feedback.length) feedbackBox.append(h('div', { class: 'empty-state' }, feedbackStatus.value === 'new' ? 'Yeni geri bildirim yok.' : 'Geri bildirim yok.'));
+  feedback.forEach((f) => feedbackBox.append(feedbackCard(f)));
+  feedbackState.before = feedback.at(-1)?.id ?? feedbackState.before;
+  feedbackMore.classList.toggle('hidden', !hasMore);
+}
+
+feedbackStatus.addEventListener('change', () => loadFeedback(true));
+feedbackMore.addEventListener('click', () => loadFeedback());
+
+/* Sekmeler: #kullanicilar / #sikayetler / #geri-bildirimler / #kayitlar */
 function showView() {
-  const view = isModerator ? 'reports' : { '#kayitlar': 'logs', '#sikayetler': 'reports' }[location.hash] || 'users';
+  const view = isModerator ? 'reports' : { '#kayitlar': 'logs', '#sikayetler': 'reports', '#geri-bildirimler': 'feedback' }[location.hash] || 'users';
   document.querySelectorAll('.admin-tabs a').forEach((a) => a.classList.toggle('active', a.dataset.view === view));
   document.getElementById('view-users').classList.toggle('hidden', view !== 'users');
   document.getElementById('view-logs').classList.toggle('hidden', view !== 'logs');
   document.getElementById('view-reports').classList.toggle('hidden', view !== 'reports');
+  document.getElementById('view-feedback').classList.toggle('hidden', view !== 'feedback');
   if (view === 'logs') return Promise.all([loadLogs(true), loadLogSummary()]);
   if (view === 'reports') return loadReports(true);
+  if (view === 'feedback') return loadFeedback(true);
   return Promise.all([loadUsers(), loadStats()]);
 }
 window.addEventListener('hashchange', showView);

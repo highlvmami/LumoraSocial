@@ -24,6 +24,7 @@
     <nav class="tabs feed-tabs admin-tabs wide">
       <a href="#kullanicilar" data-view="users" class="active">Kullanıcılar</a>
       <a href="#sikayetler" data-view="reports">Şikâyetler <span class="tab-count hidden" id="report-count"></span></a>
+      <a href="#geri-bildirimler" data-view="feedback">Geri bildirimler <span class="tab-count hidden" id="feedback-count"></span></a>
       <a href="#kayitlar" data-view="logs">Kayıtlar</a>
     </nav>
 
@@ -81,6 +82,22 @@
         </div>
         <div id="reports"></div>
         <div class="center-text"><button class="btn ghost hidden" id="reports-more" type="button">Daha fazla yükle</button></div>
+      </section>
+    </div>
+
+    <div id="view-feedback" class="hidden">
+      <section class="card panel">
+        <div class="panel-head">
+          <h2>Geri bildirimler</h2>
+          <select id="feedback-status" class="auto-width">
+            <option value="new">Yeni</option>
+            <option value="read">Okundu</option>
+            <option value="done">Tamamlanan</option>
+            <option value="all">Tümü</option>
+          </select>
+        </div>
+        <div id="feedback"></div>
+        <div class="center-text"><button class="btn ghost hidden" id="feedback-more" type="button">Daha fazla yükle</button></div>
       </section>
     </div>
 
