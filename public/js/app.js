@@ -253,7 +253,7 @@ function renderPost(post) {
     post.quote ? quoteCard(post.quote) : null,
     // Paylaşım zamanı gönderinin sol altında
     h('time', { class: 'post-time muted small', title: formatDate(post.createdAt) }, timeAgo(post.createdAt)),
-    h('div', { class: 'post-actions' }, reactions),
+    h('div', { class: 'post-actions' }, reactions, repostButton(post)),
     comments
   );
   return el;
@@ -276,6 +276,15 @@ function quoteCard(q) {
     q.content ? h('div', { class: 'quote-body' }, q.content) : null,
     q.images?.length ? h('img', { class: 'quote-image', src: q.images[0].url, alt: '', loading: 'lazy' }) : null
   );
+}
+
+/** Yeniden paylaş: yazı yerine dönen ok simgesi (varsa sayısıyla) */
+function repostButton(post) {
+  const btn = h('button', { type: 'button', class: 'repost-btn', title: 'Yeniden paylaş', 'aria-label': 'Yeniden paylaş', onclick: () => openRepostDialog(post) });
+  btn.innerHTML =
+    '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>';
+  if (post.repostCount) btn.append(h('span', { class: 'count' }, post.repostCount));
+  return btn;
 }
 
 /** Yeniden paylaşma penceresi: isteğe bağlı yorum + alıntılanan gönderi önizlemesi */

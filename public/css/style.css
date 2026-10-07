@@ -859,3 +859,6 @@ label.btn { margin: 0; font-size: 13px; }
 .role-badge .crown { position: absolute; top: -7px; right: -6px; width: 15px; height: 15px; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 1px #ff6d00; }
 .role-badge .crown::before { content: ""; position: absolute; left: 3px; top: 4px; width: 9px; height: 7px; background: linear-gradient(180deg, #ffd54f, #ff8f00); clip-path: polygon(0 100%, 0 25%, 25% 60%, 50% 0, 75% 60%, 100% 25%, 100% 100%); }
 .post-time { display: block; margin: 0 0 8px; }
+/* Yeniden paylaş: dönen ok simgesi */
+.repost-btn { display: inline-flex; align-items: center; gap: 4px; border: 0; background: transparent; color: var(--muted); padding: 4px 8px; border-radius: 8px; cursor: pointer; font: inherit; font-size: 13px; font-weight: 600; }
+.repost-btn:hover { background: var(--surface-2); color: var(--primary); }

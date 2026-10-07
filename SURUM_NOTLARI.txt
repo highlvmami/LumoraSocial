@@ -79,4 +79,4 @@
      - Telefon bildirimlerinde başlıkta işlemi yapan kişinin adı, altında ne yaptığı yazıyor (uygulama adı tekrar etmiyor)
      - Gönderilerde kullanıcı adının sağında rol rozeti: Yönetici (hareketli alev kenarlık, sağ üstte yuvarlak içinde taç), Denetimci (mavi kenarlık + büyüteç)
      - Gönderilerde "... önce" yazısı gönderinin sol altına taşındı
-     - "Yeniden paylaş" gönderinin sağındaki ⋯ menüsüne taşındı
+     - "Yeniden paylaş" yazısı yerine dönen ok simgesi; ayrıca gönderinin ⋯ menüsünde de var
