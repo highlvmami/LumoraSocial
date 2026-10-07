@@ -894,3 +894,11 @@ label.btn { margin: 0; font-size: 13px; }
 .nav-icon { width: 20px; height: 20px; flex: 0 0 auto; color: var(--muted); }
 .nav a:hover .nav-icon, .nav button:hover .nav-icon, .nav a.active .nav-icon { color: var(--primary); }
 .nav a[data-route="achievements"] .nav-icon { color: #d4a017; }
+
+/* Sağ sütun (Popüler konular): yalnızca geniş ekranda, akışın sağında sabit */
+.rightbar { display: none; }
+@media (min-width: 1240px) {
+  .layout { grid-template-columns: 280px minmax(0, 620px) 280px; }
+  .topbar-inner { max-width: 1260px; }
+  .rightbar { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 82px; align-self: start; }
+}
