@@ -1,11 +1,29 @@
+<div align="center">
+
 # LumoraSocial
 
-Arkadaşlar ve topluluklar için Türkçe bir sosyal medya sitesi: paylaşımlar, hikayeler, mesajlaşma, #etiketler, başarımlar, otomatik içerik denetimi ve yönetim paneli. Telefon için Android uygulaması da var.
+**Paylaşımlar, hikayeler, mesajlaşma, #etiketler ve otomatik içerik denetimi olan Türkçe sosyal medya.**
 
-- **Canlı site:** https://lumorasocial.onrender.com
-- **Android uygulaması:** https://lumorasocial.onrender.com/indir
+**[Canlı demo →](https://lumorasocial.onrender.com)** · **[Android uygulaması](https://lumorasocial.onrender.com/indir)**
 
-**Teknoloji:** Node.js (20+) · Express 5 · SQLite / Turso (`libsql`; yerelde dosya, canlıda bulut veritabanı) · sade HTML/CSS/JS (çerçevesiz, tek sayfa uygulama) · Web Push · bcrypt.
+Türkçe · [English](README.en.md)
+
+<p>
+  <img src="https://img.shields.io/badge/Node.js-20%2B-339933?logo=nodedotjs&logoColor=white" alt="Node.js 20+">
+  <img src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white" alt="Express 5">
+  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black" alt="JavaScript">
+  <img src="https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white" alt="SQLite">
+  <img src="https://img.shields.io/badge/Turso-4FF8D2?logo=turso&logoColor=black" alt="Turso">
+  <img src="https://img.shields.io/badge/Web%20Push-5A0FC8?logo=pwa&logoColor=white" alt="Web Push">
+  <img src="https://img.shields.io/badge/Android-TWA-3DDC84?logo=android&logoColor=white" alt="Android">
+  <img src="https://img.shields.io/badge/Render-46E3B7?logo=render&logoColor=black" alt="Render">
+</p>
+
+</div>
+
+Arkadaşlar ve topluluklar için bir sosyal medya sitesi. Üyeler yazı, fotoğraf ve anket paylaşır, hikaye atar, birbirini takip eder ve mesajlaşır; küfür ve uygunsuz fotoğraflar paylaşılmadan önce otomatik olarak engellenir. Sunucu Node.js + Express, veritabanı yerelde SQLite, canlıda Turso; arayüz çerçevesiz, sade HTML/CSS/JS ile yazılmış tek sayfa uygulama. Telefon için Android uygulaması da var.
+
+> Demo Render'ın ücretsiz planında çalışıyor. Yaklaşık 15 dakika ziyaretçi gelmezse uykuya geçer; sonraki ilk açılış bir dakikaya kadar sürebilir.
 
 ## Özellikler
 
