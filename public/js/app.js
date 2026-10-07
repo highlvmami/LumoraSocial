@@ -6,6 +6,9 @@ import { showNotifications } from './notifications.js';
 import { showMessages } from './messages.js';
 import { searchHref, showSearch } from './search.js';
 
+// Android uygulamasının ya da ana ekrana eklenmiş sitenin içinden mi açıldı?
+const inApp = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true || document.referrer.startsWith('android-app://');
+
 const state = { me: null, colors: [], socialKeys: [], stats: { followers: 0, following: 0 }, unread: 0, unreadMessages: 0 };
 const main = document.getElementById('main');
 
@@ -646,6 +649,7 @@ function showFeed() {
       feedTabs('following'),
       verifyBanner(),
       pushPrompt(),
+      appPrompt(),
       storyBar(state.me),
       suggestionStrip(),
     ].filter(Boolean)
@@ -662,6 +666,31 @@ function showFeed() {
     (before) => api(`/posts?${new URLSearchParams({ scope: 'following', ...(before && { before }) })}`),
     'Takip ettiğin kişilerin paylaşımları burada görünür. Önerilen kişilerden birilerini takip et ya da Keşfet\'e göz at. '
   );
+}
+
+/** Android telefonda tarayıcıdan girenlere uygulama önerisi (kapatılınca bir daha çıkmaz) */
+function appPrompt() {
+  let dismissed = false;
+  try {
+    dismissed = localStorage.getItem('appPromptDismissed') === '1';
+  } catch {
+    /* yok say */
+  }
+  if (dismissed || inApp || !/android/i.test(navigator.userAgent)) return null;
+  const box = h('section', { class: 'card banner app-prompt' });
+  const close = () => {
+    box.remove();
+    try {
+      localStorage.setItem('appPromptDismissed', '1');
+    } catch {
+      /* yok say */
+    }
+  };
+  box.append(
+    h('span', {}, h('b', {}, 'Uygulamayı dene'), ' LumoraSocial Android uygulamasıyla daha hızlı ve bildirimler anında.'),
+    h('div', { class: 'push-prompt-actions' }, h('button', { type: 'button', class: 'btn sm ghost', onclick: close }, 'Şimdi değil'), h('a', { class: 'btn sm', href: '/indir' }, 'İndir'))
+  );
+  return box;
 }
 
 /** Akışın üstündeki seçim: takip edilenler / keşfet (mobilde alt menüde ayrı oldukları için gizli) */
@@ -1074,13 +1103,16 @@ renderTopics();
 
 // Geniş ekranda önerilen kişiler sağ sütunda Popüler konuların altında, daha darda sol sütunda
 const wideScreen = window.matchMedia('(min-width: 1240px)');
-const placeSuggestions = () =>
-  (wideScreen.matches ? document.getElementById('rightbar') : document.getElementById('sidebar')).append(document.getElementById('suggestions'));
+const placeSuggestions = () => {
+  if (wideScreen.matches) document.getElementById('app-card').before(document.getElementById('suggestions'));
+  else document.getElementById('sidebar').append(document.getElementById('suggestions'));
+};
 placeSuggestions();
 wideScreen.addEventListener('change', placeSuggestions);
 document.getElementById('logout-btn').addEventListener('click', logout);
-// Uygulamanın içindeyken (ana ekrana eklenmiş ya da Android uygulaması) "Uygulamayı indir" gizlenir
-if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true || document.referrer.startsWith('android-app://')) document.getElementById('nav-download').remove();
+// Uygulama tanıtımı (inApp dosyanın başında tanımlı): uygulamanın içinden girilince gösterilmez.
+// Bilgisayarda sağ sütunun en altında kart, Android tarayıcıda akışın üstünde kapatılabilir şerit.
+if (!inApp) document.getElementById('app-card').classList.remove('hidden');
 
 // Tema değişince Görünüm sekmesi açıksa seçimi yenile (düğmeyi theme.js yönetir)
 document.addEventListener('lumora:theme', () => location.hash.startsWith('#/ayarlar/gorunum') && route());
